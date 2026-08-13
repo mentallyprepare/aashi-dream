@@ -38,6 +38,10 @@ const clientDistPath = path.resolve(__dirname, "../dist");
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
 
+app.get("/health", (_request, response) => {
+  response.json({ ok: true, app: "Aashi Dreams", time: nowIso(), today: todayInIst(), timezone: "Asia/Kolkata", displayTime: istDateTimeLabel() });
+});
+
 app.get("/api/health", (_request, response) => {
   response.json({ ok: true, app: "Aashi Dreams", time: nowIso(), today: todayInIst(), timezone: "Asia/Kolkata", displayTime: istDateTimeLabel() });
 });

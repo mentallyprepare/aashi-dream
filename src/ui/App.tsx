@@ -77,6 +77,21 @@ type OfficialSource = AnyRow & {
   notes: string;
 };
 
+type FormMeta = {
+  target: string;
+  region: string;
+  stage: string;
+  priority: "P1" | "P2" | "P3";
+  cycle: string;
+  deadline: string;
+  action: string;
+  why: string;
+  documents: string[];
+  route: PageKey;
+  evidence?: string;
+  sourceConfidence?: string;
+};
+
 type CourseIntelligence = AnyRow & {
   universityId: number;
   programName: string;
@@ -367,12 +382,12 @@ function universityStrategy(university: University) {
 }
 
 const navGroups: Array<{ title: string; items: Array<{ key: PageKey; label: string; icon: React.ElementType }> }> = [
-  { title: "Command Center", items: [{ key: "dashboard", label: "Aashi Dashboard", icon: LayoutDashboard }, { key: "profile", label: "My Profile", icon: CircleUserRound }] },
-  { title: "Universities", items: [{ key: "universities", label: "Elite Universities", icon: GraduationCap }, { key: "shortlist", label: "University Shortlist", icon: Target }, { key: "people", label: "Faculty Intelligence", icon: UsersRound }] },
-  { title: "Preparation", items: [{ key: "ielts", label: "IELTS Hub", icon: BarChart3 }, { key: "research", label: "Research Lab", icon: FlaskConical }, { key: "sops", label: "SOP Studio", icon: FileText }, { key: "lors", label: "LOR Command", icon: MessageSquareText }] },
-  { title: "Applications", items: [{ key: "applications", label: "Application Tracker", icon: BookOpen }, { key: "scholarships", label: "Scholarship Tracker", icon: Trophy }, { key: "visas", label: "Visa Tracker", icon: Plane }] },
-  { title: "Career", items: [{ key: "careers", label: "Career Explorer", icon: BriefcaseBusiness }, { key: "portfolio", label: "Product Portfolio", icon: ShieldCheck }, { key: "opportunities", label: "Opportunity Radar", icon: Radar }] },
-  { title: "Intelligence", items: [{ key: "sources", label: "Official Sources", icon: Library }, { key: "delta", label: "Profile Delta", icon: Sigma }, { key: "advisor", label: "AI Advisor", icon: Sparkles }, { key: "top1", label: "Top 1% Analysis", icon: ScrollText }, { key: "life", label: "Life Simulator", icon: Network }] },
+  { title: "Start", items: [{ key: "guide", label: "Start Here", icon: Target }, { key: "dashboard", label: "Live Dashboard", icon: LayoutDashboard }, { key: "forms", label: "Forms To Fill", icon: BookOpen }, { key: "profile", label: "My Profile", icon: CircleUserRound }] },
+  { title: "Colleges", items: [{ key: "universities", label: "Target Colleges", icon: GraduationCap }, { key: "shortlist", label: "Shortlist Board", icon: Target }, { key: "people", label: "Faculty CRM", icon: UsersRound }] },
+  { title: "Proof", items: [{ key: "ielts", label: "IELTS", icon: BarChart3 }, { key: "research", label: "Research", icon: FlaskConical }, { key: "sops", label: "SOP", icon: FileText }, { key: "lors", label: "LORs", icon: MessageSquareText }] },
+  { title: "Apply", items: [{ key: "applications", label: "Applications", icon: BookOpen }, { key: "scholarships", label: "Scholarships", icon: Trophy }, { key: "visas", label: "Visa", icon: Plane }] },
+  { title: "Career", items: [{ key: "careers", label: "Career Paths", icon: BriefcaseBusiness }, { key: "portfolio", label: "Portfolio", icon: ShieldCheck }, { key: "opportunities", label: "Internships", icon: Radar }] },
+  { title: "AI", items: [{ key: "sources", label: "Sources", icon: Library }, { key: "delta", label: "Profile Delta", icon: Sigma }, { key: "advisor", label: "AI Advisor", icon: Sparkles }, { key: "top1", label: "Top 1%", icon: ScrollText }, { key: "life", label: "Life Simulator", icon: Network }] },
 ];
 
 const flatNavItems = navGroups.flatMap((group) => group.items);
@@ -409,6 +424,7 @@ const partners: Record<string, PartnerTheme> = {
 
 const endpointByPage: Partial<Record<PageKey, string>> = {
   profile: "/api/profile",
+  forms: "/api/documents",
   shortlist: "/api/shortlist",
   ielts: "/api/ielts",
   research: "/api/research",
@@ -555,6 +571,53 @@ function asRecord(value: unknown): AnyRow {
 
 function asStringList(value: unknown) {
   return Array.isArray(value) ? value.map((item) => String(item)).filter(Boolean) : [];
+}
+
+function formMeta(row: OfficialSource): FormMeta {
+  try {
+    const parsed = JSON.parse(row.notes) as Partial<FormMeta>;
+    return {
+      target: String(parsed.target ?? row.title),
+      region: String(parsed.region ?? "Global"),
+      stage: String(parsed.stage ?? displayStatus(row.status)),
+      priority: parsed.priority === "P2" || parsed.priority === "P3" ? parsed.priority : "P1",
+      cycle: String(parsed.cycle ?? "Verify cycle"),
+      deadline: String(parsed.deadline ?? "Verify official deadline"),
+      action: String(parsed.action ?? "Open official source and verify the live form before submitting."),
+      why: String(parsed.why ?? row.title),
+      documents: asStringList(parsed.documents),
+      route: (parsed.route ?? "applications") as PageKey,
+      evidence: parsed.evidence ? String(parsed.evidence) : undefined,
+      sourceConfidence: parsed.sourceConfidence ? String(parsed.sourceConfidence) : "Official page checked",
+    };
+  } catch {
+    return {
+      target: row.title,
+      region: "Global",
+      stage: displayStatus(row.status),
+      priority: "P2",
+      cycle: "Verify cycle",
+      deadline: "Verify official deadline",
+      action: row.notes || "Open official source and verify the live form before submitting.",
+      why: row.title,
+      documents: [],
+      route: "applications",
+      sourceConfidence: "Stored source note",
+    };
+  }
+}
+
+function formPriorityRank(row: OfficialSource) {
+  const meta = formMeta(row);
+  const priority = meta.priority === "P1" ? 1 : meta.priority === "P2" ? 2 : 3;
+  const stageRank = meta.stage.toLowerCase().includes("scholarship") ? 1 : meta.stage.toLowerCase().includes("admission") ? 0 : 2;
+  return priority * 10 + stageRank;
+}
+
+function formRowsFromDocuments(rows: OfficialSource[]) {
+  return rows
+    .filter((row) => row.type === "application_form" || row.type === "leadership_form")
+    .sort((a, b) => formPriorityRank(a) - formPriorityRank(b) || a.title.localeCompare(b.title));
 }
 
 function kpiByLabel(kpis: Kpi[], label: string) {
@@ -841,6 +904,96 @@ function Sidebar({ onLockedFeature }: { onLockedFeature: (feature: string) => vo
         ))}
       </nav>
     </aside>
+  );
+}
+
+function StartHerePage() {
+  const setPage = useUiStore((state) => state.setPage);
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery({ queryKey: ["dashboard"], queryFn: () => apiGet<AnyRow>("/api/dashboard/kpis") });
+  const { data: documents = [], isLoading: formsLoading } = useQuery({ queryKey: ["application-forms"], queryFn: () => apiGet<OfficialSource[]>("/api/documents") });
+  const counts = (dashboardData?.counts ?? {}) as AnyRow;
+  const forms = formRowsFromDocuments(documents);
+  const priorityForms = forms.filter((row) => formMeta(row).priority === "P1").slice(0, 5);
+  const guide = [
+    { step: "1", title: "Profile", page: "profile" as PageKey, body: "Keep GPA, IELTS plan, UX Researcher internship, Mentally Prepare, achievements and research paper updated. Every score depends on this." },
+    { step: "2", title: "Target Colleges", page: "universities" as PageKey, body: "Open a college card for course details, intake size, research fit, requirements, source links and the full roadmap." },
+    { step: "3", title: "Forms To Fill", page: "forms" as PageKey, body: "This is your actual execution list: admission portals, scholarship forms, IELTS, and women leadership programme forms." },
+    { step: "4", title: "Proof", page: "research" as PageKey, body: "Turn the research paper, UX internship, and Mentally Prepare into SOP/LOR-ready proof assets." },
+    { step: "5", title: "Apply", page: "applications" as PageKey, body: "Once a form is real, move it into Applications, Scholarships, LORs, SOP, and Visa so nothing floats in your head." },
+    { step: "6", title: "AI Review", page: "top1" as PageKey, body: "Use Top 1% and Profile Delta only after the data is updated. Then ask: what is the one thing to do today?" },
+  ];
+  const navExplainer = [
+    { group: "Start", use: "Daily home, forms checklist and profile updates.", pages: "Start Here, Live Dashboard, Forms To Fill, My Profile" },
+    { group: "Colleges", use: "Choosing universities and checking course/research fit.", pages: "Target Colleges, Shortlist Board, Faculty CRM" },
+    { group: "Proof", use: "Building admission evidence before you submit.", pages: "IELTS, Research, SOP, LORs" },
+    { group: "Apply", use: "Tracking real applications, scholarships and visas.", pages: "Applications, Scholarships, Visa" },
+    { group: "Career", use: "Internships and portfolio proof for UX/product/consumer psychology.", pages: "Career Paths, Portfolio, Internships" },
+    { group: "AI", use: "Source checking, profile gaps and strategic analysis.", pages: "Sources, Profile Delta, AI Advisor, Top 1%, Life Simulator" },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <Panel className="p-5">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="mono text-[10px] font-bold uppercase tracking-widest text-[var(--accent-indigo)]">Aashi Dreams Navigation</div>
+            <h2 className="heading mt-2 text-3xl font-bold text-[var(--accent-violet)]">Use this like a calm command center, not a maze.</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-secondary)]">
+              Start with your profile, choose target colleges, fill the right forms, build proof, then track submissions. The AI pages become useful only after the real data is current.
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <Metric label="Colleges" value={dashboardLoading ? "..." : String(counts.universities ?? 0)} />
+            <Metric label="Forms" value={formsLoading ? "..." : String(forms.length)} />
+            <Metric label="Scholarships" value={dashboardLoading ? "..." : String(counts.scholarships ?? 0)} />
+          </div>
+        </div>
+      </Panel>
+
+      <Panel className="p-4">
+        <SectionTitle title="Your 6-Step Route" />
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {guide.map((item) => (
+            <button className="border-2 border-[var(--border)] bg-[var(--bg-primary)] p-4 text-left transition hover:border-[var(--accent-indigo)]" key={item.step} onClick={() => setPage(item.page)} type="button">
+              <div className="mono text-[10px] font-bold uppercase text-[var(--accent-indigo)]">Step {item.step}</div>
+              <h3 className="heading mt-1 text-xl font-semibold">{item.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{item.body}</p>
+              <div className="mt-4 inline-flex border border-[var(--border)] px-3 py-2 text-xs font-bold text-[var(--accent-indigo)]">Open {pageTitles[item.page]}</div>
+            </button>
+          ))}
+        </div>
+      </Panel>
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[0.85fr_1.15fr]">
+        <Panel className="p-4">
+          <SectionTitle title="Fill These First" />
+          <div className="space-y-2">
+            {priorityForms.length ? priorityForms.map((row) => {
+              const meta = formMeta(row);
+              return (
+                <CompactRow key={row.id ?? row.title} title={row.title} meta={`${meta.target} | ${meta.deadline}`} value={meta.priority} />
+              );
+            }) : <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-4 text-sm text-[var(--text-secondary)]">Run the forms repair script to load researched form tasks.</div>}
+          </div>
+          <button className="mt-4 bg-[var(--accent-indigo)] px-4 py-2 text-sm font-bold text-white" onClick={() => setPage("forms")} type="button">
+            Open Full Forms Checklist
+          </button>
+        </Panel>
+
+        <Panel className="p-4">
+          <SectionTitle title="Navigation Explanation" />
+          <div className="grid gap-2 md:grid-cols-2">
+            {navExplainer.map((item) => (
+              <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-3" key={item.group}>
+                <div className="heading text-lg font-semibold text-[var(--accent-indigo)]">{item.group}</div>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">{item.use}</p>
+                <div className="mt-2 text-xs font-bold uppercase text-[var(--text-secondary)]">{item.pages}</div>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </div>
+    </div>
   );
 }
 
@@ -1672,6 +1825,141 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div className="border-2 border-[var(--border)] bg-[var(--bg-primary)] p-4 rounded-2xl shadow-sm text-center flex flex-col justify-center items-center">
       <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">{label}</div>
       <div className="mono mt-2 text-2xl font-bold text-[var(--accent-indigo)]">{value}</div>
+    </div>
+  );
+}
+
+function ApplicationFormsPage() {
+  const setPage = useUiStore((state) => state.setPage);
+  const [region, setRegion] = useState("all");
+  const [stage, setStage] = useState("all");
+  const [priority, setPriority] = useState("all");
+  const { data = [], error, isError, isLoading, refetch } = useQuery({ queryKey: ["application-forms"], queryFn: () => apiGet<OfficialSource[]>("/api/documents") });
+  if (isLoading) return <div className="text-[var(--text-secondary)]">Loading researched forms...</div>;
+  if (isError) return <QueryErrorState title="Forms checklist could not load" error={error} onRetry={() => void refetch()} />;
+
+  const forms = formRowsFromDocuments(data);
+  const metas = forms.map((row) => ({ row, meta: formMeta(row) }));
+  const regions = ["all", ...Array.from(new Set(metas.map((item) => item.meta.region))).sort()];
+  const stages = ["all", ...Array.from(new Set(metas.map((item) => item.meta.stage))).sort()];
+  const filtered = metas
+    .filter((item) => region === "all" || item.meta.region === region)
+    .filter((item) => stage === "all" || item.meta.stage === stage)
+    .filter((item) => priority === "all" || item.meta.priority === priority);
+  const admissionCount = metas.filter((item) => item.meta.stage.toLowerCase().includes("admission")).length;
+  const scholarshipCount = metas.filter((item) => item.meta.stage.toLowerCase().includes("scholarship")).length;
+  const leadershipCount = forms.filter((row) => row.type === "leadership_form").length;
+  const packet = [
+    "Passport and legal name consistency",
+    "Official Christ transcript and grading/class explanation",
+    "CV: 1 admission version + 1 internship/leadership version",
+    "Master SOP spine: psychology, research, UX, Mentally Prepare, behavioural science",
+    "Research paper abstract + methods summary + submission status",
+    "UX Researcher internship evidence log and portfolio case study",
+    "Two recommender confirmations before portals send reference emails",
+    "IELTS test booking, score report plan, and school-specific minimums",
+    "Funding statement, budget plan, family income proof where needed",
+    "Mentally Prepare proof page: users, interviews, experiments, impact and screenshots",
+  ];
+
+  return (
+    <div className="space-y-4">
+      <Panel className="p-5">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="mono text-[10px] uppercase text-[var(--accent-indigo)]">Researched Form Checklist</div>
+            <h2 className="heading mt-1 text-2xl font-semibold">What forms should Anushka fill?</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--text-secondary)]">
+              Use this page as the application control list. It separates direct university portals, scholarship forms, IELTS, and leadership/internship opportunities so you do not confuse research with submission.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            <Metric label="Forms" value={String(forms.length)} />
+            <Metric label="Admission" value={String(admissionCount)} />
+            <Metric label="Scholarship" value={String(scholarshipCount)} />
+            <Metric label="Leadership" value={String(leadershipCount)} />
+          </div>
+        </div>
+      </Panel>
+
+      <Panel className="p-4">
+        <div className="flex flex-wrap items-end gap-3">
+          <Filter label="Region" value={region} options={regions} onChange={setRegion} />
+          <Filter label="Stage" value={stage} options={stages} onChange={setStage} />
+          <Filter label="Priority" value={priority} options={["all", "P1", "P2", "P3"]} onChange={setPriority} />
+          <button className="border border-[var(--border)] bg-[var(--bg-secondary)] px-4 py-2 text-sm font-bold text-[var(--accent-indigo)]" onClick={() => setPage("applications")} type="button">
+            Open Applications
+          </button>
+          <button className="border border-[var(--border)] bg-[var(--bg-secondary)] px-4 py-2 text-sm font-bold text-[var(--accent-indigo)]" onClick={() => setPage("scholarships")} type="button">
+            Open Scholarships
+          </button>
+        </div>
+      </Panel>
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+        <Panel className="p-4">
+          <SectionTitle title="Priority Form Queue" />
+          <div className="space-y-3">
+            {filtered.map(({ row, meta }) => (
+              <div className="border-2 border-[var(--border)] bg-[var(--bg-primary)] p-4" key={row.id ?? row.title}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="mono text-[10px] font-bold uppercase text-[var(--accent-indigo)]">{meta.priority} | {meta.region} | {meta.stage}</div>
+                    <h3 className="heading mt-1 text-xl font-semibold">{row.title}</h3>
+                    <p className="mt-1 text-sm text-[var(--text-secondary)]">{meta.target}</p>
+                  </div>
+                  <div className="border border-[var(--border)] bg-[var(--bg-secondary)] px-3 py-2 text-right">
+                    <div className="mono text-[10px] uppercase text-[var(--text-secondary)]">Deadline / cycle</div>
+                    <div className="text-sm font-bold text-[var(--accent-amber)]">{meta.deadline}</div>
+                  </div>
+                </div>
+                <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_0.9fr]">
+                  <div className="space-y-2 text-sm text-[var(--text-secondary)]">
+                    <p><strong className="text-[var(--text-primary)]">Do this:</strong> {meta.action}</p>
+                    <p><strong className="text-[var(--text-primary)]">Why:</strong> {meta.why}</p>
+                    {meta.evidence && <p><strong className="text-[var(--text-primary)]">Use your evidence:</strong> {meta.evidence}</p>}
+                    <p><strong className="text-[var(--text-primary)]">Source confidence:</strong> {meta.sourceConfidence}</p>
+                  </div>
+                  <div>
+                    <div className="mono text-[10px] font-bold uppercase text-[var(--text-secondary)]">Documents / fields to prepare</div>
+                    <div className="mt-2 grid gap-2">
+                      {meta.documents.map((doc) => <div className="border border-[var(--border)] bg-[var(--bg-secondary)] p-2 text-xs font-semibold text-[var(--text-secondary)]" key={doc}>{doc}</div>)}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <a className="border border-[var(--border)] bg-[var(--bg-secondary)] px-4 py-2 text-sm font-bold text-[var(--accent-indigo)]" href={row.url ?? "#"} target="_blank" rel="noreferrer">
+                    Open Official Form
+                  </a>
+                  <button className="border border-[var(--border)] bg-[var(--bg-secondary)] px-4 py-2 text-sm font-bold text-[var(--text-primary)]" onClick={() => setPage(meta.route)} type="button">
+                    Open {pageTitles[meta.route]}
+                  </button>
+                </div>
+              </div>
+            ))}
+            {filtered.length === 0 && <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-4 text-sm text-[var(--text-secondary)]">No forms match these filters.</div>}
+          </div>
+        </Panel>
+
+        <div className="space-y-4">
+          <Panel className="p-4">
+            <SectionTitle title="Personal Form Packet" />
+            <div className="space-y-2">
+              {packet.map((item, index) => <CompactRow key={item} title={item} meta="Prepare once, reuse everywhere" value={`#${index + 1}`} />)}
+            </div>
+          </Panel>
+
+          <Panel className="p-4">
+            <SectionTitle title="How To Use This Page" />
+            <div className="space-y-2 text-sm text-[var(--text-secondary)]">
+              <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-3">P1 means build now. P2 means track and prepare. P3 means useful, but only after the admission core is stable.</div>
+              <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-3">For UK and Europe, scholarship forms often require the admission application to be complete first. References can block funding access, so request LORs early.</div>
+              <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-3">For USA, funding is not one clean scholarship form. It is programme-level fellowships, assistantships, portfolio strength, and visa/OPT logic.</div>
+              <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-3">For leadership programmes, use a tighter CV: research, UX internship, Mentally Prepare, leadership, communication and measurable impact.</div>
+            </div>
+          </Panel>
+        </div>
+      </div>
     </div>
   );
 }
@@ -2904,31 +3192,35 @@ function Placeholder({ title }: { title: string }) {
 }
 
 const pageTitles: Record<PageKey, string> = {
-  dashboard: "Aashi Dashboard",
+  guide: "Start Here",
+  dashboard: "Live Dashboard",
+  forms: "Forms To Fill",
   profile: "My Profile",
-  universities: "Elite Universities",
-  shortlist: "University Shortlist",
-  ielts: "IELTS Hub",
-  research: "Research Lab",
-  sops: "SOP Studio",
-  lors: "LOR Command Center",
-  applications: "Application Tracker",
-  scholarships: "Scholarship Tracker",
-  visas: "Visa Tracker",
-  careers: "Career Explorer",
-  portfolio: "Product Portfolio",
-  opportunities: "Opportunity Radar",
-  people: "Faculty Intelligence",
-  sources: "Official Sources",
+  universities: "Target Colleges",
+  shortlist: "Shortlist Board",
+  ielts: "IELTS",
+  research: "Research",
+  sops: "SOP",
+  lors: "LORs",
+  applications: "Applications",
+  scholarships: "Scholarships",
+  visas: "Visa",
+  careers: "Career Paths",
+  portfolio: "Portfolio",
+  opportunities: "Internships",
+  people: "Faculty CRM",
+  sources: "Sources",
   delta: "Profile Delta",
   advisor: "AI Advisor",
-  top1: "Top 1% Analysis",
+  top1: "Top 1%",
   life: "Life Design Simulator",
 };
 
 function CurrentPage() {
   const page = useUiStore((state) => state.page);
+  if (page === "guide") return <StartHerePage />;
   if (page === "dashboard") return <Dashboard />;
+  if (page === "forms") return <ApplicationFormsPage />;
   if (page === "universities") return <UniversitiesPage />;
   if (page === "profile") return <ProfilePage />;
   if (page === "shortlist") return <ShortlistPage />;

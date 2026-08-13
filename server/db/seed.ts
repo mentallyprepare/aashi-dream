@@ -1,9 +1,10 @@
-import { count } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { db } from "./client.js";
 import { initDb } from "./init.js";
 import {
   applications,
   careers,
+  documents,
   ieltsProgress,
   lorContacts,
   people,
@@ -17,6 +18,7 @@ import {
   universityShortlist,
   visaTracker,
 } from "./schema.js";
+import { formChecklistSeeds } from "./form-seeds.js";
 
 const now = () => new Date().toISOString();
 
@@ -393,6 +395,24 @@ async function seedIfEmpty() {
       createdAt: now(),
       updatedAt: now(),
     }))).run();
+  }
+
+  for (const form of formChecklistSeeds) {
+    const existing = db.select().from(documents).where(eq(documents.title, form.title)).get();
+    const values = {
+      title: form.title,
+      type: form.type,
+      url: form.url,
+      status: form.status,
+      notes: JSON.stringify(form.notes),
+      createdAt: existing?.createdAt ?? now(),
+      updatedAt: now(),
+    };
+    if (existing) {
+      db.update(documents).set(values).where(eq(documents.id, existing.id)).run();
+    } else {
+      db.insert(documents).values(values).run();
+    }
   }
 }
 

@@ -1,7 +1,9 @@
 import { create } from "zustand";
 
 export type PageKey =
+  | "guide"
   | "dashboard"
+  | "forms"
   | "profile"
   | "universities"
   | "shortlist"
@@ -30,7 +32,7 @@ type UiState = {
 };
 
 export const useUiStore = create<UiState>((set) => ({
-  page: "dashboard",
+  page: "guide",
   collapsed: false,
   setPage: (page) => set({ page }),
   toggleCollapsed: () => set((state) => ({ collapsed: !state.collapsed })),

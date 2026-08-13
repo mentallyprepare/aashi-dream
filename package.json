@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "20"
+  },
   "scripts": {
     "dev": "concurrently \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "tsx watch server/index.ts",
@@ -19,6 +22,7 @@
     "repair:opportunities": "tsx server/db/repair-opportunity-sources.ts",
     "repair:behavioural-targets": "tsx server/db/repair-behavioural-science-targets.ts",
     "repair:course-intelligence": "tsx server/db/repair-course-intelligence.ts",
+    "repair:forms": "tsx server/db/repair-forms-checklist.ts",
     "check": "tsc --noEmit"
   },
   "dependencies": {
