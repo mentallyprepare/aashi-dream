@@ -1,0 +1,32 @@
+{
+  "updatedAt": "2026-05-27T00:00:00+05:30",
+  "updates": [
+    {
+      "title": "Asia scholarship scan for psychology and behavioral science",
+      "type": "Scholarship",
+      "match": 82,
+      "deadline": "Rolling by country",
+      "source": "University scholarship pages",
+      "role": "Build one scholarship evidence folder with leadership, research, and Mentally Prepare impact",
+      "who": "University financial aid office"
+    },
+    {
+      "title": "NUS / NTU graduate program fit check",
+      "type": "College",
+      "match": 74,
+      "deadline": "Program-specific",
+      "source": "Admissions pages",
+      "role": "Prepare research-fit paragraph and shortlist 3 faculty/lab matches",
+      "who": "Graduate admissions and potential supervisor"
+    },
+    {
+      "title": "Conference abstract for behavioral science profile",
+      "type": "Research",
+      "match": 88,
+      "deadline": "Next open call",
+      "source": "Conference/news scan",
+      "role": "Convert your research paper into abstract, poster, and 3-minute pitch",
+      "who": "Research mentor"
+    }
+  ]
+}

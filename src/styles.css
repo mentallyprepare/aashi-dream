@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #650b23;
+  --primary-brand-color: #650b23;
+  --secondary-brand-color: #9d1734;
+  --bg-primary: #fffaf0; /* paper */
+  --bg-secondary: #fff2f4; /* rose-50 */
+  --bg-tertiary: #ffd5df; /* rose-100 */
+  --border: rgba(101, 11, 35, 0.18);
+  --text-primary: #32111a; /* ink */
+  --text-secondary: #9d1734; /* rose-500 */
+  --accent-indigo: #650b23; /* plum */
+  --accent-violet: #650b23; /* plum */
+  --accent-emerald: #4d7248; /* sage-dark */
+  --accent-amber: #ffb15c; /* gold */
+  --accent-red: #ef4444;
+  --accent-blue: #0e7772; /* teal */
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at 18px 18px, rgba(157, 23, 52, 0.08) 1px, transparent 1.5px),
+    var(--bg-primary);
+  background-size: 36px 36px, auto;
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.mono {
+  font-family: "JetBrains Mono", monospace;
+}
+
+.heading {
+  font-family: "Fraunces", Georgia, serif;
+}
+
+.design-mood-card {
+  display: none !important;
+}
+
+.nav-item.locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.nav-item.locked::after {
+  content: " 🔒";
+  font-size: 11px;
+  margin-left: auto;
+}
+
+.nav-item.locked::after {
+  content: " premium";
+}
+
+.printed-report-header {
+  display: none;
+}
+
+@media print {
+  .sidebar,
+  nav,
+  .profile-inputs,
+  button,
+  .print-button,
+  .slider-knob,
+  .design-mood,
+  header select {
+    display: none !important;
+  }
+
+  .printed-report-header {
+    display: block !important;
+  }
+
+  .main-content {
+    width: 100% !important;
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+}

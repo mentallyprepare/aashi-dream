@@ -1,0 +1,14 @@
+node_modules/
+dist/
+dist-server/
+*.tsbuildinfo
+*.log
+*.err
+*.zip
+browser-*.json
+repl-test.txt
+tmp-chrome-audit/
+data/*.db
+data/*.db-shm
+data/*.db-wal
+.env
