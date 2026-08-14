@@ -3,6 +3,9 @@
   "version": "2.4.0",
   "description": "Aashi Dreams Intelligence Engine — Student Digital Twin SaaS",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
