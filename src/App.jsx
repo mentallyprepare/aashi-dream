@@ -1,16 +1,19 @@
-import React,{useEffect,useState} from 'react';
+import React,{useEffect} from 'react';
 import {BrowserRouter,Routes,Route,Navigate} from 'react-router-dom';
-import {onAuthStateChanged} from 'firebase/auth';
-import {auth,firebaseReady} from './lib/firebase';
 import {getPartnerConfig} from './lib/partners';
-import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Pricing from './pages/Pricing';
-import Paywall from './components/Paywall';
+
+const personalUser={
+  displayName:'Anushka Navin Kumar',
+  email:'personal@aashidreams.local',
+};
+
+const personalSubscription={
+  status:'active',
+  plan:'private_workspace',
+};
 
 export default function App(){
-  const [user,setUser]=useState(undefined);
-  const [subscription,setSubscription]=useState(null);
   const partner=getPartnerConfig();
 
   useEffect(()=>{
@@ -21,42 +24,21 @@ export default function App(){
     }
   },[partner]);
 
-  useEffect(()=>{
-    if(!firebaseReady||!auth){
-      setUser(null);
-      return undefined;
-    }
-
-    const unsub=onAuthStateChanged(auth,async firebaseUser=>{
-      setUser(firebaseUser);
-      if(firebaseUser){
-        try{
-          const token=await firebaseUser.getIdToken();
-          await fetch('/api/auth/sync',{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'}});
-          const r=await fetch('/api/payments/status',{headers:{Authorization:`Bearer ${token}`}});
-          const d=await r.json();
-          setSubscription(d.subscription);
-        }catch(e){console.error('Sync error:',e);}
-      }
-    });
-    return()=>unsub();
-  },[]);
-
-  if(user===undefined) return(
-    <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh'}}>
-      <div style={{color:'#7c3aed',fontSize:'1.5rem'}}>✨ Loading Aashi Dreams...</div>
-    </div>
-  );
-
   return(
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={!user?<Login partner={partner}/>:<Navigate to="/"/>}/>
-        <Route path="/pricing" element={<Pricing user={user} subscription={subscription} partner={partner}/>}/>
-        <Route path="/*" element={!user?<Navigate to="/login"/>:
-          <Paywall user={user} subscription={subscription} partner={partner}>
-            <Dashboard user={user} subscription={subscription} partner={partner}/>
-          </Paywall>}/>
+        <Route path="/login" element={<Navigate to="/" replace/>}/>
+        <Route path="/pricing" element={<Navigate to="/" replace/>}/>
+        <Route
+          path="/*"
+          element={
+            <Dashboard
+              user={personalUser}
+              subscription={personalSubscription}
+              partner={partner}
+            />
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

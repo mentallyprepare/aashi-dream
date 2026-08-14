@@ -17,9 +17,9 @@ export default function Dashboard({ user, partner }) {
             Student Digital Twin
           </div>
           <h1 style={{ marginTop: '.5rem', fontSize: '2.25rem' }}>{brand.appName}</h1>
-          <p style={{ marginTop: '.5rem', color: '#94a3b8' }}>Signed in as {user?.email || 'preview user'}</p>
+          <p style={{ marginTop: '.5rem', color: '#94a3b8' }}>Private workspace for {user?.displayName || 'Anushka'}</p>
         </div>
-        <a className="btn btn-outline" href="/pricing">Manage access</a>
+        <span className="btn btn-outline" style={{ cursor: 'default' }}>AI Core Active</span>
       </header>
 
       <section style={{ marginTop: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
