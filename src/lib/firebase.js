@@ -10,16 +10,31 @@ const firebaseConfig={
   appId:            import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const app=getApps().length===0?initializeApp(firebaseConfig):getApps()[0];
-export const auth=getAuth(app);
+export const firebaseReady=Boolean(
+  firebaseConfig.apiKey &&
+  firebaseConfig.authDomain &&
+  firebaseConfig.projectId &&
+  firebaseConfig.appId
+);
+
+const app=firebaseReady
+  ? (getApps().length===0?initializeApp(firebaseConfig):getApps()[0])
+  : null;
+
+export const auth=app?getAuth(app):null;
 
 const googleProvider=new GoogleAuthProvider();
 googleProvider.addScope('email');
 googleProvider.addScope('profile');
 
 export async function signInWithGoogle(){
+  if(!auth){
+    throw new Error('Firebase environment variables are not configured.');
+  }
   const result=await signInWithPopup(auth,googleProvider);
   return result.user;
 }
-export async function signOutUser(){await signOut(auth);}
+export async function signOutUser(){
+  if(auth) await signOut(auth);
+}
 export default app;

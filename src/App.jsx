@@ -1,7 +1,7 @@
 import React,{useEffect,useState} from 'react';
 import {BrowserRouter,Routes,Route,Navigate} from 'react-router-dom';
 import {onAuthStateChanged} from 'firebase/auth';
-import {auth} from './lib/firebase';
+import {auth,firebaseReady} from './lib/firebase';
 import {getPartnerConfig} from './lib/partners';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -22,6 +22,11 @@ export default function App(){
   },[partner]);
 
   useEffect(()=>{
+    if(!firebaseReady||!auth){
+      setUser(null);
+      return undefined;
+    }
+
     const unsub=onAuthStateChanged(auth,async firebaseUser=>{
       setUser(firebaseUser);
       if(firebaseUser){
