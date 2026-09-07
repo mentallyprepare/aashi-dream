@@ -77,6 +77,8 @@ type OfficialSource = AnyRow & {
   notes: string;
 };
 
+type FormAvailability = "open" | "opening_soon" | "watch" | "closed" | "not_eligible";
+
 type FormMeta = {
   target: string;
   region: string;
@@ -90,6 +92,10 @@ type FormMeta = {
   route: PageKey;
   evidence?: string;
   sourceConfidence?: string;
+  availability?: FormAvailability;
+  openDate?: string;
+  deadlineDate?: string;
+  lastChecked?: string;
 };
 
 type CourseIntelligence = AnyRow & {
@@ -384,7 +390,7 @@ function universityStrategy(university: University) {
 const navGroups: Array<{ title: string; items: Array<{ key: PageKey; label: string; icon: React.ElementType }> }> = [
   { title: "Start", items: [{ key: "guide", label: "Start Here", icon: Target }, { key: "dashboard", label: "Live Dashboard", icon: LayoutDashboard }, { key: "forms", label: "Forms To Fill", icon: BookOpen }, { key: "profile", label: "My Profile", icon: CircleUserRound }] },
   { title: "Colleges", items: [{ key: "universities", label: "Target Colleges", icon: GraduationCap }, { key: "shortlist", label: "Shortlist Board", icon: Target }, { key: "people", label: "Faculty CRM", icon: UsersRound }] },
-  { title: "Proof", items: [{ key: "ielts", label: "IELTS", icon: BarChart3 }, { key: "research", label: "Research", icon: FlaskConical }, { key: "sops", label: "SOP", icon: FileText }, { key: "lors", label: "LORs", icon: MessageSquareText }] },
+  { title: "Proof", items: [{ key: "ielts", label: "Tests", icon: BarChart3 }, { key: "research", label: "Research", icon: FlaskConical }, { key: "sops", label: "SOP", icon: FileText }, { key: "lors", label: "LORs", icon: MessageSquareText }] },
   { title: "Apply", items: [{ key: "applications", label: "Applications", icon: BookOpen }, { key: "scholarships", label: "Scholarships", icon: Trophy }, { key: "visas", label: "Visa", icon: Plane }] },
   { title: "Career", items: [{ key: "careers", label: "Career Paths", icon: BriefcaseBusiness }, { key: "portfolio", label: "Portfolio", icon: ShieldCheck }, { key: "opportunities", label: "Internships", icon: Radar }] },
   { title: "AI", items: [{ key: "sources", label: "Sources", icon: Library }, { key: "delta", label: "Profile Delta", icon: Sigma }, { key: "advisor", label: "AI Advisor", icon: Sparkles }, { key: "top1", label: "Top 1%", icon: ScrollText }, { key: "life", label: "Life Simulator", icon: Network }] },
@@ -573,6 +579,12 @@ function asStringList(value: unknown) {
   return Array.isArray(value) ? value.map((item) => String(item)).filter(Boolean) : [];
 }
 
+function asFormAvailability(value: unknown): FormAvailability | undefined {
+  return value === "open" || value === "opening_soon" || value === "watch" || value === "closed" || value === "not_eligible"
+    ? value
+    : undefined;
+}
+
 function formMeta(row: OfficialSource): FormMeta {
   try {
     const parsed = JSON.parse(row.notes) as Partial<FormMeta>;
@@ -589,6 +601,10 @@ function formMeta(row: OfficialSource): FormMeta {
       route: (parsed.route ?? "applications") as PageKey,
       evidence: parsed.evidence ? String(parsed.evidence) : undefined,
       sourceConfidence: parsed.sourceConfidence ? String(parsed.sourceConfidence) : "Official page checked",
+      availability: asFormAvailability(parsed.availability),
+      openDate: parsed.openDate ? String(parsed.openDate) : undefined,
+      deadlineDate: parsed.deadlineDate ? String(parsed.deadlineDate) : undefined,
+      lastChecked: parsed.lastChecked ? String(parsed.lastChecked) : undefined,
     };
   } catch {
     return {
@@ -603,6 +619,7 @@ function formMeta(row: OfficialSource): FormMeta {
       documents: [],
       route: "applications",
       sourceConfidence: "Stored source note",
+      availability: "watch",
     };
   }
 }
@@ -618,6 +635,75 @@ function formRowsFromDocuments(rows: OfficialSource[]) {
   return rows
     .filter((row) => row.type === "application_form" || row.type === "leadership_form")
     .sort((a, b) => formPriorityRank(a) - formPriorityRank(b) || a.title.localeCompare(b.title));
+}
+
+function formAvailabilityTone(status: FormAvailability) {
+  if (status === "open") return "border-[color:rgba(16,185,129,0.45)] text-[var(--accent-emerald)]";
+  if (status === "opening_soon") return "border-[color:rgba(245,158,11,0.45)] text-[var(--accent-amber)]";
+  if (status === "closed") return "border-[color:rgba(239,68,68,0.45)] text-[var(--accent-red)]";
+  if (status === "not_eligible") return "border-[color:rgba(139,143,163,0.45)] text-[var(--text-secondary)]";
+  return "border-[color:rgba(59,130,246,0.45)] text-[var(--accent-blue)]";
+}
+
+function relativeDayCopy(label: string, days: number | null) {
+  if (days === null) return `${label}: date not posted`;
+  if (days < 0) return `${label} passed`;
+  if (days === 0) return `${label}: today`;
+  if (days === 1) return `${label}: tomorrow`;
+  return `${label}: in ${days} days`;
+}
+
+function formLiveStatus(meta: FormMeta) {
+  const deadlineDays = daysUntil(meta.deadlineDate);
+  const openDays = daysUntil(meta.openDate);
+  let status: FormAvailability = meta.availability ?? "watch";
+
+  if (status !== "not_eligible") {
+    if (deadlineDays !== null && deadlineDays < 0) {
+      status = "closed";
+    } else if (status === "opening_soon" && openDays !== null && openDays <= 0) {
+      status = "open";
+    } else if (status === "watch" && openDays !== null && openDays > 0 && openDays <= 45) {
+      status = "opening_soon";
+    }
+  }
+
+  const label: Record<FormAvailability, string> = {
+    open: "Open now",
+    opening_soon: "Opening soon",
+    watch: "Watch",
+    closed: "Closed",
+    not_eligible: "Not eligible",
+  };
+  const rank: Record<FormAvailability, number> = {
+    open: 0,
+    opening_soon: 1,
+    watch: 2,
+    not_eligible: 3,
+    closed: 4,
+  };
+  const priorityRank = meta.priority === "P1" ? 0 : meta.priority === "P2" ? 1 : 2;
+  const nearestDate = status === "opening_soon" ? openDays : deadlineDays;
+  const dateRank = nearestDate !== null && nearestDate >= 0 ? nearestDate : 999;
+
+  return {
+    status,
+    label: label[status],
+    tone: formAvailabilityTone(status),
+    timing: status === "opening_soon" ? relativeDayCopy("Opens", openDays) : relativeDayCopy("Deadline", deadlineDays),
+    sort: rank[status] * 10000 + priorityRank * 100 + dateRank,
+  };
+}
+
+function FormStatusBadge({ status }: { status: FormAvailability }) {
+  const labels: Record<FormAvailability, string> = {
+    open: "Open now",
+    opening_soon: "Opening soon",
+    watch: "Watch",
+    closed: "Closed",
+    not_eligible: "Not eligible",
+  };
+  return <span className={`mono inline-flex border bg-[var(--bg-secondary)] px-2.5 py-1 text-[10px] font-bold uppercase ${formAvailabilityTone(status)}`}>{labels[status]}</span>;
 }
 
 function kpiByLabel(kpis: Kpi[], label: string) {
@@ -913,9 +999,14 @@ function StartHerePage() {
   const { data: documents = [], isLoading: formsLoading } = useQuery({ queryKey: ["application-forms"], queryFn: () => apiGet<OfficialSource[]>("/api/documents") });
   const counts = (dashboardData?.counts ?? {}) as AnyRow;
   const forms = formRowsFromDocuments(documents);
-  const priorityForms = forms.filter((row) => formMeta(row).priority === "P1").slice(0, 5);
+  const priorityForms = forms
+    .map((row) => ({ row, meta: formMeta(row) }))
+    .map((item) => ({ ...item, live: formLiveStatus(item.meta) }))
+    .filter((item) => item.meta.priority === "P1" && item.live.status !== "closed" && item.live.status !== "not_eligible")
+    .sort((a, b) => a.live.sort - b.live.sort || a.row.title.localeCompare(b.row.title))
+    .slice(0, 5);
   const guide = [
-    { step: "1", title: "Profile", page: "profile" as PageKey, body: "Keep GPA, IELTS plan, UX Researcher internship, Mentally Prepare, achievements and research paper updated. Every score depends on this." },
+    { step: "1", title: "Profile", page: "profile" as PageKey, body: "Keep GPA, IELTS plan, GRE October plan, UX Researcher internship, Mentally Prepare, achievements and research paper updated. Every score depends on this." },
     { step: "2", title: "Target Colleges", page: "universities" as PageKey, body: "Open a college card for course details, intake size, research fit, requirements, source links and the full roadmap." },
     { step: "3", title: "Forms To Fill", page: "forms" as PageKey, body: "This is your actual execution list: admission portals, scholarship forms, IELTS, and women leadership programme forms." },
     { step: "4", title: "Proof", page: "research" as PageKey, body: "Turn the research paper, UX internship, and Mentally Prepare into SOP/LOR-ready proof assets." },
@@ -925,10 +1016,26 @@ function StartHerePage() {
   const navExplainer = [
     { group: "Start", use: "Daily home, forms checklist and profile updates.", pages: "Start Here, Live Dashboard, Forms To Fill, My Profile" },
     { group: "Colleges", use: "Choosing universities and checking course/research fit.", pages: "Target Colleges, Shortlist Board, Faculty CRM" },
-    { group: "Proof", use: "Building admission evidence before you submit.", pages: "IELTS, Research, SOP, LORs" },
+    { group: "Proof", use: "Building admission evidence before you submit.", pages: "Tests, Research, SOP, LORs" },
     { group: "Apply", use: "Tracking real applications, scholarships and visas.", pages: "Applications, Scholarships, Visa" },
     { group: "Career", use: "Internships and portfolio proof for UX/product/consumer psychology.", pages: "Career Paths, Portfolio, Internships" },
     { group: "AI", use: "Source checking, profile gaps and strategic analysis.", pages: "Sources, Profile Delta, AI Advisor, Top 1%, Life Simulator" },
+  ];
+  const counsellingStages = [
+    { stage: "0", title: "Know the profile", decision: "What is your exact story?", action: "Profile, GPA, IELTS, GRE October plan, UX internship, research paper and Mentally Prepare must be current before any AI score is trusted." },
+    { stage: "1", title: "Country + course logic", decision: "Behavioural Science, HCI/UX, Consumer Psychology, or Management?", action: "Keep Behavioural Science/HCI as P1. Keep broad management/MBA-style routes as P3 unless they directly support product psychology." },
+    { stage: "2", title: "Test decision", decision: "GRE, GMAT, IELTS, or waiver?", action: "IELTS is mandatory planning. GRE is P1 only for Penn MBDS and other USA courses requiring it; GMAT/MBA is not the main route now." },
+    { stage: "3", title: "Profile gap repair", decision: "What quality problem blocks admits?", action: "Fix one gap at a time: research submission, IELTS score, statistics proof, SOP story, LOR strength, portfolio case study." },
+    { stage: "4", title: "Shortlist into risk bands", decision: "Ambitious, moderate, safe?", action: "Do not make one dream-only list. Build 2 reach, 3 target, 2 safe choices across UK, USA and Europe." },
+    { stage: "5", title: "Documents + forms", decision: "What can be submitted soon?", action: "Use Forms To Fill as the execution queue. Submit early when portals open; never wait until the deadline week." },
+    { stage: "6", title: "Funding + assistantship", decision: "Scholarship, loan, RA/TA/GA, or family funds?", action: "For USA, track RA/TA/GA emails and professor fit. For UK/Europe, track scholarship forms and admission-first funding rules." },
+    { stage: "7", title: "Offer and visa", decision: "Which admit has best ROI and mobility?", action: "Compare cost, visa, work rights, alumni outcomes, and career fit before paying deposits." },
+  ];
+  const immediateDecisions = [
+    { title: "GRE / GRA confusion", value: "GRE is an exam you are planning for October 2026; GA/RA/TA are assistantship roles. For you, IELTS is universal, GRE is USA-specific, RA/TA/GA is funding/networking after shortlist." },
+    { title: "MBA / management routes", value: "MBA or generic management is P3 now. Behavioural Science, HCI/UX Research, Consumer Psychology and Product Psychology stay P1/P2 because they fit your proof." },
+    { title: "Quality problem", value: "The current quality blockers are not ideas; they are evidence. You need a submitted research paper, strong IELTS, one polished UX case study, and two recommenders." },
+    { title: "Second options", value: "Second options should not be random. They should be safer programs that still use the same story: UCL/Warwick/Bath/Erasmus/Tilburg/NYU/Penn/CMU style routes." },
   ];
 
   return (
@@ -964,14 +1071,39 @@ function StartHerePage() {
         </div>
       </Panel>
 
+      <Panel className="p-4">
+        <SectionTitle title="Counselling Operating System" />
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {counsellingStages.map((item) => (
+            <div className="border-2 border-[var(--border)] bg-[var(--bg-primary)] p-4" key={item.stage}>
+              <div className="mono text-[10px] font-bold uppercase text-[var(--accent-indigo)]">Stage {item.stage}</div>
+              <h3 className="heading mt-1 text-lg font-semibold">{item.title}</h3>
+              <p className="mt-2 text-xs font-bold uppercase text-[var(--text-secondary)]">{item.decision}</p>
+              <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{item.action}</p>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      <Panel className="p-4">
+        <SectionTitle title="Decision Clarity" />
+        <div className="grid gap-3 md:grid-cols-2">
+          {immediateDecisions.map((item) => (
+            <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-4" key={item.title}>
+              <div className="heading text-lg font-semibold text-[var(--accent-violet)]">{item.title}</div>
+              <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{item.value}</p>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[0.85fr_1.15fr]">
         <Panel className="p-4">
           <SectionTitle title="Fill These First" />
           <div className="space-y-2">
-            {priorityForms.length ? priorityForms.map((row) => {
-              const meta = formMeta(row);
+            {priorityForms.length ? priorityForms.map(({ row, meta, live }) => {
               return (
-                <CompactRow key={row.id ?? row.title} title={row.title} meta={`${meta.target} | ${meta.deadline}`} value={meta.priority} />
+                <CompactRow key={row.id ?? row.title} title={row.title} meta={`${live.label} | ${meta.target} | ${meta.deadline}`} value={meta.priority} />
               );
             }) : <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-4 text-sm text-[var(--text-secondary)]">Run the forms repair script to load researched form tasks.</div>}
           </div>
@@ -1386,6 +1518,14 @@ function IeltsHubPage() {
   const scores = (data?.scores ?? []) as AnyRow[];
   const unlocks = (data?.unlocks ?? []) as Array<{ band: number; unlocked: boolean; universities: string[] }>;
   const weeklyPlan = (data?.weeklyPlan ?? []) as Array<{ skill: string; focus: string; cadence: string }>;
+  const greSprint = [
+    { title: "Week 1", meta: "Diagnostic + Quant basics", value: "now" },
+    { title: "Week 2", meta: "Arithmetic, algebra, vocabulary base", value: "p1" },
+    { title: "Week 3", meta: "Data interpretation + reading comprehension", value: "p1" },
+    { title: "Week 4", meta: "Timed sections and error log", value: "p1" },
+    { title: "Week 5", meta: "Full mock + Penn MBDS score-send planning", value: "p1" },
+    { title: "Week 6", meta: "Final revision + retake decision buffer", value: "p1" },
+  ];
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -1394,6 +1534,27 @@ function IeltsHubPage() {
         <Metric label="Readiness" value={`${String(data?.readiness)}%`} />
         <Metric label="Planned Date" value={String(data?.plannedDate)} />
       </div>
+      <Panel className="p-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="mono text-[10px] font-bold uppercase tracking-widest text-[var(--accent-indigo)]">Test Strategy</div>
+            <h2 className="heading mt-1 text-2xl font-semibold">IELTS for all routes. GRE for USA routes.</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--text-secondary)]">
+              Your October plan should run both tracks without mixing them up. IELTS unlocks English requirements; GRE strengthens Penn MBDS and USA programmes that require analytical-test proof.
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <Metric label="GRE Target" value="320+" />
+            <Metric label="Quant" value="160+" />
+            <Metric label="Verbal" value="160+" />
+          </div>
+        </div>
+        <div className="mt-4 grid gap-2 md:grid-cols-3">
+          <CompactRow title="GRE registration" meta="ETS account + October test date" value="Sep 20" />
+          <CompactRow title="Main GRE use" meta="Penn MBDS and USA required/recommended routes" value="P1" />
+          <CompactRow title="Not main use" meta="LSE/UCL/Warwick/Erasmus unless they explicitly ask" value="P3" />
+        </div>
+      </Panel>
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[0.8fr_1.2fr]">
         <Panel className="p-4">
           <SectionTitle title="Add Mock Score" />
@@ -1433,6 +1594,10 @@ function IeltsHubPage() {
         <Panel className="p-4">
           <SectionTitle title="Weekly Study Plan" />
           <div className="space-y-2">{weeklyPlan.map((item) => <CompactRow key={item.skill} title={item.skill} meta={item.focus} value={item.cadence} />)}</div>
+        </Panel>
+        <Panel className="p-4">
+          <SectionTitle title="GRE 6-Week Sprint" />
+          <div className="space-y-2">{greSprint.map((item) => <CompactRow key={item.title} title={item.title} meta={item.meta} value={item.value} />)}</div>
         </Panel>
       </div>
     </div>
@@ -1840,15 +2005,24 @@ function ApplicationFormsPage() {
 
   const forms = formRowsFromDocuments(data);
   const metas = forms.map((row) => ({ row, meta: formMeta(row) }));
-  const regions = ["all", ...Array.from(new Set(metas.map((item) => item.meta.region))).sort()];
-  const stages = ["all", ...Array.from(new Set(metas.map((item) => item.meta.stage))).sort()];
-  const filtered = metas
+  const liveItems = metas.map((item) => ({ ...item, live: formLiveStatus(item.meta) }));
+  const regions = ["all", ...Array.from(new Set(liveItems.map((item) => item.meta.region))).sort()];
+  const stages = ["all", ...Array.from(new Set(liveItems.map((item) => item.meta.stage))).sort()];
+  const filtered = liveItems
     .filter((item) => region === "all" || item.meta.region === region)
     .filter((item) => stage === "all" || item.meta.stage === stage)
     .filter((item) => priority === "all" || item.meta.priority === priority);
-  const admissionCount = metas.filter((item) => item.meta.stage.toLowerCase().includes("admission")).length;
-  const scholarshipCount = metas.filter((item) => item.meta.stage.toLowerCase().includes("scholarship")).length;
+  const admissionCount = liveItems.filter((item) => item.meta.stage.toLowerCase().includes("admission")).length;
+  const scholarshipCount = liveItems.filter((item) => item.meta.stage.toLowerCase().includes("scholarship")).length;
   const leadershipCount = forms.filter((row) => row.type === "leadership_form").length;
+  const openCount = liveItems.filter((item) => item.live.status === "open").length;
+  const openingSoonCount = liveItems.filter((item) => item.live.status === "opening_soon").length;
+  const watchCount = liveItems.filter((item) => item.live.status === "watch").length;
+  const p1Count = liveItems.filter((item) => item.meta.priority === "P1" && item.live.status !== "closed" && item.live.status !== "not_eligible").length;
+  const liveQueue = [...liveItems]
+    .filter((item) => item.live.status === "open" || item.live.status === "opening_soon" || (item.meta.priority === "P1" && item.live.status === "watch"))
+    .sort((a, b) => a.live.sort - b.live.sort || a.row.title.localeCompare(b.row.title))
+    .slice(0, 8);
   const packet = [
     "Passport and legal name consistency",
     "Official Christ transcript and grading/class explanation",
@@ -1858,6 +2032,7 @@ function ApplicationFormsPage() {
     "UX Researcher internship evidence log and portfolio case study",
     "Two recommender confirmations before portals send reference emails",
     "IELTS test booking, score report plan, and school-specific minimums",
+    "GRE October booking, score target, and USA-only requirement map",
     "Funding statement, budget plan, family income proof where needed",
     "Mentally Prepare proof page: users, interviews, experiments, impact and screenshots",
   ];
@@ -1883,6 +2058,55 @@ function ApplicationFormsPage() {
       </Panel>
 
       <Panel className="p-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="mono text-[10px] font-bold uppercase tracking-widest text-[var(--accent-emerald)]">Live Form Watch</div>
+            <h3 className="heading mt-1 text-xl font-semibold">Forms coming out now</h3>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--text-secondary)]">
+              Updated from official pages. Treat Open Now and Opening Soon as the current execution queue; Watch means prepare the packet but wait for the 2027/28 page refresh.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            <Metric label="Open Now" value={String(openCount)} />
+            <Metric label="Opening Soon" value={String(openingSoonCount)} />
+            <Metric label="Watch" value={String(watchCount)} />
+            <Metric label="Active P1" value={String(p1Count)} />
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-2">
+          {liveQueue.map(({ row, meta, live }) => (
+            <div className="border-2 border-[var(--border)] bg-[var(--bg-primary)] p-4" key={`live-${row.id ?? row.title}`}>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <FormStatusBadge status={live.status} />
+                  <h4 className="heading mt-2 text-lg font-semibold">{row.title}</h4>
+                  <p className="mt-1 text-sm text-[var(--text-secondary)]">{meta.target}</p>
+                </div>
+                <div className={`mono border bg-[var(--bg-secondary)] px-3 py-2 text-right text-xs font-bold ${live.tone}`}>
+                  {live.timing}
+                </div>
+              </div>
+              <div className="mt-3 grid gap-2 text-xs text-[var(--text-secondary)] md:grid-cols-2">
+                <div className="border border-[var(--border)] bg-[var(--bg-secondary)] p-2">
+                  <span className="font-bold text-[var(--text-primary)]">Opens:</span> {meta.openDate ? formatIstDate(meta.openDate) : "Not posted"}
+                </div>
+                <div className="border border-[var(--border)] bg-[var(--bg-secondary)] p-2">
+                  <span className="font-bold text-[var(--text-primary)]">Deadline:</span> {meta.deadlineDate ? formatIstDate(meta.deadlineDate) : meta.deadline}
+                </div>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">{meta.action}</p>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs text-[var(--text-secondary)]">{meta.sourceConfidence}</span>
+                <a className="border border-[var(--border)] bg-[var(--bg-secondary)] px-3 py-2 text-xs font-bold text-[var(--accent-indigo)]" href={row.url ?? "#"} target="_blank" rel="noreferrer">
+                  Open official page
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      <Panel className="p-4">
         <div className="flex flex-wrap items-end gap-3">
           <Filter label="Region" value={region} options={regions} onChange={setRegion} />
           <Filter label="Stage" value={stage} options={stages} onChange={setStage} />
@@ -1900,11 +2124,14 @@ function ApplicationFormsPage() {
         <Panel className="p-4">
           <SectionTitle title="Priority Form Queue" />
           <div className="space-y-3">
-            {filtered.map(({ row, meta }) => (
+            {filtered.map(({ row, meta, live }) => (
               <div className="border-2 border-[var(--border)] bg-[var(--bg-primary)] p-4" key={row.id ?? row.title}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <div className="mono text-[10px] font-bold uppercase text-[var(--accent-indigo)]">{meta.priority} | {meta.region} | {meta.stage}</div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="mono text-[10px] font-bold uppercase text-[var(--accent-indigo)]">{meta.priority} | {meta.region} | {meta.stage}</div>
+                      <FormStatusBadge status={live.status} />
+                    </div>
                     <h3 className="heading mt-1 text-xl font-semibold">{row.title}</h3>
                     <p className="mt-1 text-sm text-[var(--text-secondary)]">{meta.target}</p>
                   </div>
@@ -1918,6 +2145,7 @@ function ApplicationFormsPage() {
                     <p><strong className="text-[var(--text-primary)]">Do this:</strong> {meta.action}</p>
                     <p><strong className="text-[var(--text-primary)]">Why:</strong> {meta.why}</p>
                     {meta.evidence && <p><strong className="text-[var(--text-primary)]">Use your evidence:</strong> {meta.evidence}</p>}
+                    <p><strong className="text-[var(--text-primary)]">Form status:</strong> {live.label}. {live.timing}. {meta.openDate ? `Opens ${formatIstDate(meta.openDate)}. ` : ""}{meta.deadlineDate ? `Deadline ${formatIstDate(meta.deadlineDate)}.` : ""}</p>
                     <p><strong className="text-[var(--text-primary)]">Source confidence:</strong> {meta.sourceConfidence}</p>
                   </div>
                   <div>
@@ -3142,13 +3370,47 @@ function ProfilePage() {
   if (isLoading) return <div className="text-[var(--text-secondary)]">Loading profile...</div>;
   if (isError) return <QueryErrorState title="Profile could not load" error={error} onRetry={() => void refetch()} />;
   if (!row) return <QueryErrorState title="No profile found" error="The database is missing the seeded Anushka profile. Run npm run seed." />;
+  const testPlan = asRecord(row.ielts);
+  const grePlan = asRecord(testPlan.gre);
   return (
-    <Panel className="p-5">
-      <h2 className="heading text-xl font-semibold">{String(row.name)}</h2>
-      <p className="mt-1 text-[var(--text-secondary)]">{String(row.degree)} | {String(row.university)} | {String(row.year)}</p>
+    <div className="space-y-4">
+      <Panel className="p-5">
+        <h2 className="heading text-xl font-semibold">{String(row.name)}</h2>
+        <p className="mt-1 text-[var(--text-secondary)]">{String(row.degree)} | {String(row.university)} | {String(row.year)}</p>
+        <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Metric label="IELTS Target" value={String(testPlan.target ?? 7.5)} />
+          <Metric label="IELTS Date" value={String(testPlan.planned_date ?? "2026-10")} />
+          <Metric label="GRE Target" value={String(grePlan.target_total ?? 320)} />
+          <Metric label="GRE Date" value={String(grePlan.planned_date ?? "2026-10")} />
+        </div>
+      </Panel>
+
+      <Panel className="p-4">
+        <SectionTitle title="USA Test Strategy" />
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-4">
+            <div className="mono text-[10px] font-bold uppercase text-[var(--accent-indigo)]">GRE</div>
+            <div className="heading mt-1 text-lg font-semibold">October 2026</div>
+            <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{String(grePlan.strategy ?? "Use GRE only where USA programmes require or reward it.")}</p>
+          </div>
+          <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-4">
+            <div className="mono text-[10px] font-bold uppercase text-[var(--accent-amber)]">Target Split</div>
+            <div className="heading mt-1 text-lg font-semibold">Q {String(grePlan.quant_target ?? 160)} | V {String(grePlan.verbal_target ?? 160)} | AWA {String(grePlan.awa_target ?? 4)}</div>
+            <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">This gives Penn MBDS and other analytical USA courses a cleaner academic signal.</p>
+          </div>
+          <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-4">
+            <div className="mono text-[10px] font-bold uppercase text-[var(--accent-emerald)]">Decision Rule</div>
+            <div className="heading mt-1 text-lg font-semibold">GRE is not for every country</div>
+            <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">UK and Europe stay programme-led. Use GRE mainly for Penn MBDS and USA options that require it.</p>
+          </div>
+        </div>
+      </Panel>
+
       <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <pre className="max-h-[540px] overflow-auto border border-[var(--border)] bg-[var(--bg-primary)] p-4 text-xs text-[var(--text-secondary)]">{JSON.stringify(row, null, 2)}</pre>
-        <div>
+        <Panel className="p-0">
+          <pre className="max-h-[540px] overflow-auto p-4 text-xs text-[var(--text-secondary)]">{JSON.stringify(row, null, 2)}</pre>
+        </Panel>
+        <Panel className="p-4">
           <label className="text-xs uppercase text-[var(--text-secondary)]">Quick notes autosave</label>
           <textarea
             className="mt-2 h-48 w-full border border-[var(--border)] bg-[var(--bg-primary)] p-3 text-sm"
@@ -3157,9 +3419,9 @@ function ProfilePage() {
             onChange={(event) => setDraft(event.target.value)}
           />
           <button className="mt-3 bg-[var(--accent-indigo)] px-4 py-2 font-semibold text-white" type="button" onClick={() => mutation.mutate({ ...row, year: draft || row.year })}>Autosave now</button>
-        </div>
+        </Panel>
       </div>
-    </Panel>
+    </div>
   );
 }
 
@@ -3198,7 +3460,7 @@ const pageTitles: Record<PageKey, string> = {
   profile: "My Profile",
   universities: "Target Colleges",
   shortlist: "Shortlist Board",
-  ielts: "IELTS",
+  ielts: "Tests: IELTS + GRE",
   research: "Research",
   sops: "SOP",
   lors: "LORs",

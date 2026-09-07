@@ -7,7 +7,7 @@ import { nowIso } from "../lib/time.js";
 initDb();
 
 const now = nowIso();
-const verifiedAt = "2026-08-13T00:00:00.000Z";
+const verifiedAt = "2026-09-01T00:00:00.000Z";
 
 type SourceLink = { label: string; url: string };
 
@@ -41,10 +41,10 @@ const seeds: CourseIntelligenceSeed[] = [
     intakeFrequency: "One main autumn intake per academic year",
     intakeCount: 66,
     intakeCountStatus: "official_2024_intake",
-    applicationStatus: "2026/27 closed; rolling admission closes when full",
-    applicationOpenDate: "2025-10-08",
+    applicationStatus: "2027/28 applications open in October 2026; apply early because rolling programmes close when full and funding/visa timing matters",
+    applicationOpenDate: "2026-10-01",
     applicationCloseDate: null,
-    priorityFundingDate: "2026-04-23",
+    priorityFundingDate: null,
     courseSummary:
       "World-leading behavioural science master's focused on understanding, predicting and influencing human behaviour through psychology, economics, statistics, experimental design and applied behaviour-change methods.",
     moduleHighlights: [
@@ -74,12 +74,13 @@ const seeds: CourseIntelligenceSeed[] = [
     ],
     sourceUrls: [
       { label: "LSE MSc Behavioural Science", url: "https://www.lse.ac.uk/study-at-lse/graduate/msc-behavioural-science" },
+      { label: "LSE when to apply", url: "https://www.lse.ac.uk/study-at-lse/Graduate/Prospective-students/How-to-Apply/When-to-apply" },
       { label: "LSE available programmes", url: "https://www.lse.ac.uk/study-at-lse/graduate/available-programmes" },
       { label: "LSE Behavioural Lab", url: "https://www.lse.ac.uk/PBS/research/Behavioural-Lab" },
     ],
     sourceConfidence: "official programme page + official availability page",
     nextCheckDate: "2026-10-01",
-    notes: "Published 2024 signals: 448 applications, 66 intake, 7:1 ratio. Use this as high-competition proof; apply early for the next cycle.",
+    notes: "Published 2024 signals: 448 applications, 66 intake, 7:1 ratio. 2027/28 opens October 2026; finish references before submitting because LSE does not process until references arrive.",
   },
   {
     match: (name) => name.includes("warwick"),
@@ -88,10 +89,10 @@ const seeds: CourseIntelligenceSeed[] = [
     intakeFrequency: "One main autumn intake per academic year",
     intakeCount: 30,
     intakeCountStatus: "official_range_25_to_30",
-    applicationStatus: "2026 entry closed after extended 2 August 2026 final deadline",
-    applicationOpenDate: "2025-10-01",
-    applicationCloseDate: "2026-08-02",
-    priorityFundingDate: "2025-12-31",
+    applicationStatus: "2026 entry closed after extended 2 August 2026 final deadline; 2027/28 application rounds not yet posted",
+    applicationOpenDate: null,
+    applicationCloseDate: null,
+    priorityFundingDate: null,
     courseSummary:
       "Quantitative behavioural economics and decision-science master's led by Psychology, with multidisciplinary input from Psychology, Economics and Warwick Business School.",
     moduleHighlights: [
@@ -124,7 +125,7 @@ const seeds: CourseIntelligenceSeed[] = [
     ],
     sourceConfidence: "official programme page",
     nextCheckDate: "2026-10-01",
-    notes: "Official page states typical class size around 25-30 students. Use 30 as the tracker ceiling but display as a range.",
+    notes: "Official page states typical class size around 25-30 students. Keep October as the next check point, but do not treat old 2026 round dates as live.",
   },
   {
     match: (name) => name.includes("ucl") || name.includes("university college london"),
@@ -133,9 +134,9 @@ const seeds: CourseIntelligenceSeed[] = [
     intakeFrequency: "One main autumn intake per academic year",
     intakeCount: null,
     intakeCountStatus: "not_published",
-    applicationStatus: "Visa applicants closed 27 March 2026; non-visa applicants open until 28 August 2026",
-    applicationOpenDate: "2025-10-20",
-    applicationCloseDate: "2026-03-27",
+    applicationStatus: "2026/27 closed: visa applicants closed 27 March 2026 and non-visa applicants closed 28 August 2026; 2027/28 page watch",
+    applicationOpenDate: null,
+    applicationCloseDate: null,
     priorityFundingDate: null,
     courseSummary:
       "Applied behaviour-change master's centred on systematic use of behaviour-change theory and methods to design, implement and evaluate interventions, primarily using the Behaviour Change Wheel.",
@@ -172,7 +173,7 @@ const seeds: CourseIntelligenceSeed[] = [
     ],
     sourceConfidence: "official programme page",
     nextCheckDate: "2026-10-20",
-    notes: "Cohort size/intake count is not published on the programme page. Treat admissions pressure as high because UCL advises early applications due to competition.",
+    notes: "Cohort size/intake count is not published on the programme page. As of 1 Sep 2026 the 2026/27 UCL Behaviour Change MSc application dates are closed; watch for the 2027/28 refresh.",
   },
   {
     match: (name) => name.includes("erasmus"),
@@ -181,9 +182,9 @@ const seeds: CourseIntelligenceSeed[] = [
     intakeFrequency: "One main September intake per academic year",
     intakeCount: null,
     intakeCountStatus: "not_published_selection_no",
-    applicationStatus: "2026/27 non-EEA deadline passed on 1 April 2026",
-    applicationOpenDate: "2025-10-01",
-    applicationCloseDate: "2026-04-01",
+    applicationStatus: "2026/27 non-EEA deadline passed on 1 April 2026; EUR says to check again in fall for next year's application period",
+    applicationOpenDate: null,
+    applicationCloseDate: null,
     priorityFundingDate: null,
     courseSummary:
       "Economics-and-business MSc specialisation in Behavioural Economics focused on how context and framing influence decision-making and how behavioural insights can improve strategy, products and policy.",
@@ -217,8 +218,8 @@ const seeds: CourseIntelligenceSeed[] = [
       { label: "Why this programme", url: "https://www.eur.nl/en/master/behavioural-economics/why-this-programme" },
     ],
     sourceConfidence: "official programme page + official facts page",
-    nextCheckDate: "2026-10-01",
-    notes: "Official page lists selection as No, but does not publish cohort size. Track as not capped unless the next-cycle page changes.",
+    nextCheckDate: "2026-11-01",
+    notes: "Official page lists selection as No, but does not publish cohort size. 2026/27 applications are closed; watch the fall page refresh before setting a live 2027/28 deadline.",
   },
   {
     match: (name) => name.includes("carnegie mellon"),
@@ -227,9 +228,9 @@ const seeds: CourseIntelligenceSeed[] = [
     intakeFrequency: "One annual fall intake; no spring intake",
     intakeCount: 57,
     intakeCountStatus: "official_fall_2025_matriculation",
-    applicationStatus: "2026/27 closed; next application season expected in fall",
-    applicationOpenDate: null,
-    applicationCloseDate: null,
+    applicationStatus: "Fall 2027 MHCI application opens 9 September 2026 and closes 15 January 2027 at 3:00 PM EST",
+    applicationOpenDate: "2026-09-09",
+    applicationCloseDate: "2027-01-15",
     priorityFundingDate: null,
     courseSummary:
       "STEM-designated one-year professional HCI master's preparing students to plan, design, build and evaluate human-centred technologies across UX research, product, AI, design, engineering and strategy.",
@@ -262,12 +263,14 @@ const seeds: CourseIntelligenceSeed[] = [
     ],
     sourceUrls: [
       { label: "CMU MHCI overview", url: "https://hcii.cmu.edu/academics/mhci" },
+      { label: "CMU MHCI application portal", url: "https://admissions.scs.cmu.edu/portal/apply_mhci" },
+      { label: "CMU SCS graduate admissions", url: "https://www.cs.cmu.edu/education/graduate-admissions" },
       { label: "CMU MHCI curriculum", url: "https://hcii.cmu.edu/academics/mhci/curriculum" },
       { label: "CMU MHCI FAQ", url: "https://hcii.cmu.edu/academics/mhci/faq" },
     ],
     sourceConfidence: "official programme page + official curriculum + official FAQ",
-    nextCheckDate: "2026-10-01",
-    notes: "CMU is the strongest USA behavioural-design/HCI-adjacent route, but IELTS and funding hurdles are unusually high.",
+    nextCheckDate: "2026-09-09",
+    notes: "CMU is the strongest USA behavioural-design/HCI-adjacent route, and the Fall 2027 application portal is about to open. IELTS/TOEFL, portfolio quality and funding are the key hurdles.",
   },
 ];
 

@@ -137,20 +137,20 @@ const universitySeeds = ([
 });
 
 const scholarshipsSeed = [
-  ["Chevening", "UK", "government", 55000, "2026-11-05", "Leadership-focused full scholarship for UK master's study.", "https://www.chevening.org/scholarships/", "medium"],
-  ["Commonwealth Master's Scholarship", "UK", "government", 52000, "2026-12-12", "For candidates from eligible Commonwealth countries.", "https://cscuk.fcdo.gov.uk/scholarships/", "medium"],
+  ["Chevening", "UK", "government", 55000, "2026-10-06", "Leadership-focused full scholarship for UK master's study. India 2027-2028 applications are open now.", "https://www.chevening.org/scholarship/india/", "medium"],
+  ["Commonwealth Master's Scholarship", "UK", "government", 52000, "2026-10-20", "For eligible Commonwealth candidates. 2027/28 applications open 8 Sep 2026 through CSC Central.", "https://cscuk.fcdo.gov.uk/scholarships/commonwealth-masters-scholarships/", "medium"],
   ["Fulbright Foreign Student Program", "USA", "government", 60000, "2026-07-15", "Highly competitive US graduate study award.", "https://foreign.fulbrightonline.org/", "low"],
   ["Erasmus Mundus Joint Masters", "Europe", "merit", 55000, "2027-01-10", "EU-funded joint master's scholarship.", "https://erasmus-plus.ec.europa.eu/", "medium"],
-  ["DAAD Master's Scholarships", "Germany", "government", 24000, "2026-10-31", "Funding for Germany postgraduate study.", "https://www.daad.de/en/studying-in-germany/scholarships/", "medium"],
+  ["DAAD Master's Scholarships", "Germany", "government", 24000, "2026-10-31", "Funding for Germany postgraduate study; exact India deadline must be checked in the DAAD database.", "https://www2.daad.de/deutschland/stipendium/datenbank/en/21148-scholarship-database/?detail=50026200", "medium"],
   ["GREAT Scholarships", "UK", "merit", 12500, "2027-04-30", "UK university-specific awards for international students.", "https://study-uk.britishcouncil.org/scholarships-funding/great-scholarships", "high"],
   ["Gates Cambridge", "UK", "merit", 70000, "2026-12-03", "Full-cost Cambridge award for outstanding applicants.", "https://www.gatescambridge.org/", "low"],
   ["Rhodes Scholarship", "UK", "merit", 75000, "2026-10-02", "Oxford leadership scholarship.", "https://www.rhodeshouse.ox.ac.uk/", "low"],
   ["Marshall Scholarship", "UK", "government", 70000, "2026-09-24", "US citizens only; track as reference, not eligible unless citizenship fits.", "https://www.marshallscholarship.org/", "low"],
   ["Clarendon Scholarship", "UK", "merit", 65000, "2026-12-15", "Oxford graduate scholarship considered with application.", "https://www.ox.ac.uk/clarendon", "low"],
   ["Schwarzman Scholars", "China", "leadership", 70000, "2026-09-12", "Global leadership master's at Tsinghua.", "https://www.schwarzmanscholars.org/", "medium"],
-  ["Knight-Hennessy Scholars", "USA", "merit", 85000, "2026-10-08", "Stanford graduate funding.", "https://knight-hennessy.stanford.edu/", "low"],
+  ["Knight-Hennessy Scholars", "USA", "merit", 85000, "2026-10-06", "Stanford graduate funding for the 2027 cohort; requires separate Stanford graduate application.", "https://knight-hennessy.stanford.edu/admission/preparing-your-applications/application-deadlines", "low"],
   ["AAUW International Fellowship", "USA", "women", 25000, "2026-11-15", "Women pursuing graduate study in the US.", "https://www.aauw.org/resources/programs/fellowships-grants/", "medium"],
-  ["Inlaks Shivdasani Scholarship", "Global", "merit", 100000, "2027-03-30", "Indian students for top global graduate programs.", "https://www.inlaksfoundation.org/scholarships/", "medium"],
+  ["Inlaks Shivdasani Scholarship", "Global", "merit", 100000, "2026-03-30", "Indian students for top global graduate programs. Applications are closed for 2026; next cycle watch.", "https://inlaksfoundation.org/opportunities/scholarship/", "medium"],
   ["J.N. Tata Endowment", "Global", "need", 12000, "2027-03-21", "Loan scholarship for Indians pursuing higher studies abroad.", "https://jntataendowment.org/", "high"],
   ["KC Mahindra Scholarship", "Global", "merit", 12000, "2027-03-31", "Indian postgraduate study abroad scholarship.", "https://www.kcmet.org/", "high"],
   ["Aga Khan Foundation ISP", "Global", "need", 30000, "2027-03-31", "Need-based graduate support in select countries.", "https://the.akdn/en/what-we-do/developing-human-capacity/education/international-scholarship-programme", "medium"],
@@ -166,7 +166,8 @@ const scholarshipsSeed = [
   ["Global Korea Scholarship", "South Korea", "government", 25000, "2027-03-01", "Korean government scholarship for graduate study.", "https://www.studyinkorea.go.kr/", "medium"],
   ["Australia Awards", "Australia", "government", 60000, "2027-04-30", "Australia government scholarship route.", "https://www.dfat.gov.au/people-to-people/australia-awards", "low"],
   ["Melbourne Graduate Scholarship", "Australia", "merit", 20000, "2027-03-31", "University of Melbourne graduate scholarships.", "https://scholarships.unimelb.edu.au/", "medium"],
-  ["UCL Global Masters Scholarship", "UK", "need", 20000, "2027-05-01", "Need-based UCL award for international master's students.", "https://www.ucl.ac.uk/scholarships/ucl-global-masters-scholarship", "medium"],
+  ["UCL Global Masters Scholarship", "UK", "need", 19000, "2026-05-07", "Need-based UCL award for international master's students. 2026/27 cycle closed; 2027/28 watch.", "https://www.ucl.ac.uk/scholarships/ucl-global-masters-scholarship", "medium"],
+  ["UCL India Excellence Scholarship", "UK", "merit", 6300, "2026-02-26", "UCL India-domiciled postgraduate taught award. 2026/27 cycle closed; no separate form in that cycle.", "https://www.ucl.ac.uk/scholarships/ucl-india-excellence-scholarship", "medium"],
 ].map(([name, country, type, amountUsd, deadline, eligibilitySummary, url, winningProbability]) => ({
   name: String(name),
   country: String(country),
@@ -219,7 +220,21 @@ async function seedIfEmpty() {
       university: "Christ University",
       year: "Final Year (4th Year)",
       gpa: null,
-      ielts: { planned_date: "2026-10", target: 7.5, current_score: null },
+      ielts: {
+        planned_date: "2026-10",
+        target: 7.5,
+        current_score: null,
+        gre: {
+          planned_date: "2026-10",
+          target_total: 320,
+          quant_target: 160,
+          verbal_target: 160,
+          awa_target: 4,
+          current_total: null,
+          status: "planning_to_take_in_october",
+          strategy: "Use GRE for USA routes such as Penn MBDS or other programmes that require it. UK and Europe remain IELTS/programme-led unless a course explicitly asks for GRE.",
+        },
+      },
       research: {
         current_paper: "First-Person vs Third-Person Games: Do They Differently Affect Derealization?",
         status: "preparing_for_submission",
@@ -237,6 +252,8 @@ async function seedIfEmpty() {
       ],
       experienceTags: [
         "UX Researcher Internship",
+        "GRE October 2026 plan",
+        "USA test strategy",
         "User interviews",
         "Usability testing",
         "Insight synthesis",
@@ -328,6 +345,9 @@ async function seedIfEmpty() {
     db.insert(tasks).values([
       { title: "Finish research paper submission package", category: "research", priority: "p1", status: "in_progress", dueDate: "2026-07-31", source: "ai", notes: "Highest leverage action.", createdAt: now(), updatedAt: now() },
       { title: "Build IELTS October preparation calendar", category: "ielts", priority: "p1", status: "todo", dueDate: "2026-06-15", source: "ai", notes: "Target 7.5; writing needs early diagnostics.", createdAt: now(), updatedAt: now() },
+      { title: "Register GRE General Test for October 2026", category: "tests", priority: "p1", status: "todo", dueDate: "2026-09-20", source: "manual", notes: "Create ETS account, choose October GRE General Test date, confirm passport name match, and add Penn MBDS score code planning.", createdAt: now(), updatedAt: now() },
+      { title: "Build 6-week GRE study sprint", category: "tests", priority: "p1", status: "todo", dueDate: "2026-09-10", source: "manual", notes: "Quant foundations, verbal vocabulary/RC, one AWA template, weekly mock review, and one retake-buffer decision point.", createdAt: now(), updatedAt: now() },
+      { title: "Decide USA GRE-required shortlist", category: "applications", priority: "p1", status: "todo", dueDate: "2026-09-15", source: "manual", notes: "Mark Penn MBDS as GRE-required unless waiver applies. Verify CMU MHCI, NYU MA Psychology, Berkeley MIMS and other USA routes one by one.", createdAt: now(), updatedAt: now() },
       { title: "Convert UX Researcher internship into a case study", category: "portfolio", priority: "p1", status: "todo", dueDate: "2026-08-20", source: "manual", notes: "Document research goal, method, interview/usability evidence, insights, recommendation, and product impact.", createdAt: now(), updatedAt: now() },
       { title: "Create professor CRM shortlist for UCL, LSE, Bath, Erasmus", category: "network", priority: "p2", status: "todo", dueDate: "2026-06-20", source: "ai", notes: "Professor CRM is a top ROI feature.", createdAt: now(), updatedAt: now() },
     ]).run();
