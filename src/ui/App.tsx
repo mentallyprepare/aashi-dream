@@ -170,6 +170,18 @@ function universityFitScore(university: University) {
   return Math.round((university.behavioralScienceFit + university.consumerPsychFit + university.pmFit + university.researchFit + university.startupFit) / 5);
 }
 
+type CourseRoute = "behavioural_science" | "marketing_consumer_analytics";
+
+function universityCourseRoutes(university: University): CourseRoute[] {
+  const program = university.programName.toLowerCase();
+  const routes: CourseRoute[] = [];
+  if (/behavio|psychology|hci|human-computer|decision|social science/.test(program)) routes.push("behavioural_science");
+  if (/marketing|consumer|analytics|data science|information|management|business psychology|survey/.test(program)) {
+    routes.push("marketing_consumer_analytics");
+  }
+  return routes;
+}
+
 function admissionsChanceBand(university: University) {
   if (university.acceptanceDifficulty === "safe") return "Higher probability";
   if (university.acceptanceDifficulty === "target") return "Realistic target";
@@ -892,6 +904,53 @@ function BehavioralScienceTrackPanel({ targets, onNavigate }: { targets: Univers
   );
 }
 
+function CourseStrategyPanel({ onNavigate }: { onNavigate: (page: PageKey) => void }) {
+  const routes = [
+    {
+      priority: "P1",
+      title: "MSc Behavioural Science",
+      purpose: "Primary route",
+      outcome: "Behavioural Scientist, UX Researcher, Behavioural Product roles",
+      evidence: "Psychology honours, research paper, UX research internship, Mentally Prepare",
+      tone: "text-[var(--accent-emerald)]",
+    },
+    {
+      priority: "P2",
+      title: "MSc Marketing / Consumer Analytics",
+      purpose: "Second course option",
+      outcome: "Consumer Insights, Marketing Analytics, Product Strategy roles",
+      evidence: "Add statistics, Excel/SQL, survey analysis, segmentation and one consumer-insight case study",
+      tone: "text-[var(--accent-amber)]",
+    },
+  ];
+  return (
+    <Panel className="p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="mono text-[10px] font-bold uppercase tracking-widest text-[var(--accent-indigo)]">Course Decision</div>
+          <h3 className="heading mt-1 text-2xl font-semibold">Two routes. One coherent Anushka story.</h3>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--text-secondary)]">
+            Behavioural Science remains the strongest academic fit. Marketing or Consumer Analytics is the commercial second route, using the same psychology and UX evidence with stronger quantitative proof.
+          </p>
+        </div>
+        <button className="border border-[var(--border)] bg-[var(--bg-secondary)] px-3 py-2 text-xs font-bold text-[var(--accent-indigo)]" onClick={() => onNavigate("universities")} type="button">
+          Compare Colleges
+        </button>
+      </div>
+      <div className="mt-4 grid gap-3 lg:grid-cols-2">
+        {routes.map((route) => (
+          <div className="border-2 border-[var(--border)] bg-[var(--bg-primary)] p-4" key={route.priority}>
+            <div className={`mono text-[10px] font-bold uppercase ${route.tone}`}>{route.priority} | {route.purpose}</div>
+            <h4 className="heading mt-2 text-xl font-semibold">{route.title}</h4>
+            <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]"><strong className="text-[var(--text-primary)]">Career bridge:</strong> {route.outcome}</p>
+            <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]"><strong className="text-[var(--text-primary)]">Proof plan:</strong> {route.evidence}</p>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
 function PremiumFeatureModal({ feature, onClose }: { feature: string | null; onClose: () => void }) {
   if (!feature) return null;
   return (
@@ -1006,7 +1065,7 @@ function StartHerePage() {
     .sort((a, b) => a.live.sort - b.live.sort || a.row.title.localeCompare(b.row.title))
     .slice(0, 5);
   const guide = [
-    { step: "1", title: "Profile", page: "profile" as PageKey, body: "Keep GPA, IELTS plan, GRE October plan, UX Researcher internship, Mentally Prepare, achievements and research paper updated. Every score depends on this." },
+    { step: "1", title: "Profile", page: "profile" as PageKey, body: "Keep GPA, November IELTS/GRE plan, UX Researcher internship, both course routes, Mentally Prepare, achievements and research paper updated. Every score depends on this." },
     { step: "2", title: "Target Colleges", page: "universities" as PageKey, body: "Open a college card for course details, intake size, research fit, requirements, source links and the full roadmap." },
     { step: "3", title: "Forms To Fill", page: "forms" as PageKey, body: "This is your actual execution list: admission portals, scholarship forms, IELTS, and women leadership programme forms." },
     { step: "4", title: "Proof", page: "research" as PageKey, body: "Turn the research paper, UX internship, and Mentally Prepare into SOP/LOR-ready proof assets." },
@@ -1022,8 +1081,8 @@ function StartHerePage() {
     { group: "AI", use: "Source checking, profile gaps and strategic analysis.", pages: "Sources, Profile Delta, AI Advisor, Top 1%, Life Simulator" },
   ];
   const counsellingStages = [
-    { stage: "0", title: "Know the profile", decision: "What is your exact story?", action: "Profile, GPA, IELTS, GRE October plan, UX internship, research paper and Mentally Prepare must be current before any AI score is trusted." },
-    { stage: "1", title: "Country + course logic", decision: "Behavioural Science, HCI/UX, Consumer Psychology, or Management?", action: "Keep Behavioural Science/HCI as P1. Keep broad management/MBA-style routes as P3 unless they directly support product psychology." },
+    { stage: "0", title: "Know the profile", decision: "What is your exact story?", action: "Profile, GPA, November IELTS/GRE plan, UX internship, research paper and Mentally Prepare must be current before any AI score is trusted." },
+    { stage: "1", title: "Country + course logic", decision: "Which of your two course routes fits?", action: "Keep Behavioural Science/HCI as P1. Use MSc Marketing or Consumer Analytics as P2 when the curriculum includes consumer research, analytics and product strategy. Generic MBA remains P3." },
     { stage: "2", title: "Test decision", decision: "GRE, GMAT, IELTS, or waiver?", action: "IELTS is mandatory planning. GRE is P1 only for Penn MBDS and other USA courses requiring it; GMAT/MBA is not the main route now." },
     { stage: "3", title: "Profile gap repair", decision: "What quality problem blocks admits?", action: "Fix one gap at a time: research submission, IELTS score, statistics proof, SOP story, LOR strength, portfolio case study." },
     { stage: "4", title: "Shortlist into risk bands", decision: "Ambitious, moderate, safe?", action: "Do not make one dream-only list. Build 2 reach, 3 target, 2 safe choices across UK, USA and Europe." },
@@ -1032,10 +1091,10 @@ function StartHerePage() {
     { stage: "7", title: "Offer and visa", decision: "Which admit has best ROI and mobility?", action: "Compare cost, visa, work rights, alumni outcomes, and career fit before paying deposits." },
   ];
   const immediateDecisions = [
-    { title: "GRE / GRA confusion", value: "GRE is an exam you are planning for October 2026; GA/RA/TA are assistantship roles. For you, IELTS is universal, GRE is USA-specific, RA/TA/GA is funding/networking after shortlist." },
+    { title: "GRE / GRA confusion", value: "GRE is an exam you are planning for the first week of November 2026; GA/RA/TA are assistantship roles. For you, IELTS is universal, GRE is USA-specific, RA/TA/GA is funding/networking after shortlist." },
     { title: "MBA / management routes", value: "MBA or generic management is P3 now. Behavioural Science, HCI/UX Research, Consumer Psychology and Product Psychology stay P1/P2 because they fit your proof." },
     { title: "Quality problem", value: "The current quality blockers are not ideas; they are evidence. You need a submitted research paper, strong IELTS, one polished UX case study, and two recommenders." },
-    { title: "Second options", value: "Second options should not be random. They should be safer programs that still use the same story: UCL/Warwick/Bath/Erasmus/Tilburg/NYU/Penn/CMU style routes." },
+    { title: "Second course route", value: "MSc Marketing or Consumer Analytics is now P2. Prioritise courses with consumer behaviour, market research, experimentation, statistics and analytics, not broad generic marketing degrees." },
   ];
 
   return (
@@ -1151,6 +1210,7 @@ function Dashboard() {
     <div className="space-y-4">
       <DashboardHero profile={profileRow} topAction={topAction} counts={counts} onNavigate={setPage} />
       <ReadinessCommandStrip kpis={kpis} />
+      <CourseStrategyPanel onNavigate={setPage} />
       {behavioralScienceTargets.length > 0 && <BehavioralScienceTrackPanel targets={behavioralScienceTargets} onNavigate={setPage} />}
       {courseIntelligence.length > 0 && <CourseIntakeTrackerPanel records={courseIntelligence} universities={behavioralScienceTargets} onNavigate={setPage} />}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.45fr_0.55fr]">
@@ -1519,12 +1579,12 @@ function IeltsHubPage() {
   const unlocks = (data?.unlocks ?? []) as Array<{ band: number; unlocked: boolean; universities: string[] }>;
   const weeklyPlan = (data?.weeklyPlan ?? []) as Array<{ skill: string; focus: string; cadence: string }>;
   const greSprint = [
-    { title: "Week 1", meta: "Diagnostic + Quant basics", value: "now" },
-    { title: "Week 2", meta: "Arithmetic, algebra, vocabulary base", value: "p1" },
-    { title: "Week 3", meta: "Data interpretation + reading comprehension", value: "p1" },
-    { title: "Week 4", meta: "Timed sections and error log", value: "p1" },
-    { title: "Week 5", meta: "Full mock + Penn MBDS score-send planning", value: "p1" },
-    { title: "Week 6", meta: "Final revision + retake decision buffer", value: "p1" },
+    { title: "Week 1", meta: "POWERPREP diagnostic, IELTS baseline, accommodations request", value: "now" },
+    { title: "Weeks 2-3", meta: "GRE foundations + IELTS skill practice", value: "build" },
+    { title: "Weeks 4-5", meta: "Mixed question sets, writing and timed mini-sections", value: "build" },
+    { title: "Week 6", meta: "Timed sections + full IELTS test over two days", value: "time" },
+    { title: "Week 7", meta: "POWERPREP 2 + full Cambridge IELTS simulation", value: "mock" },
+    { title: "Week 8", meta: "Final simulation, recurring errors, sleep and confidence", value: "final" },
   ];
   return (
     <div className="space-y-4">
@@ -1538,9 +1598,9 @@ function IeltsHubPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="mono text-[10px] font-bold uppercase tracking-widest text-[var(--accent-indigo)]">Test Strategy</div>
-            <h2 className="heading mt-1 text-2xl font-semibold">IELTS for all routes. GRE for USA routes.</h2>
+            <h2 className="heading mt-1 text-2xl font-semibold">First week of November: IELTS for all routes, GRE for selected USA routes.</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--text-secondary)]">
-              Your October plan should run both tracks without mixing them up. IELTS unlocks English requirements; GRE strengthens Penn MBDS and USA programmes that require analytical-test proof.
+              Your eight-week plan keeps both tests simple and dyslexia-friendly. IELTS unlocks English requirements; GRE strengthens Penn MBDS and USA programmes that require analytical-test proof.
             </p>
           </div>
           <div className="grid grid-cols-3 gap-2">
@@ -1550,7 +1610,7 @@ function IeltsHubPage() {
           </div>
         </div>
         <div className="mt-4 grid gap-2 md:grid-cols-3">
-          <CompactRow title="GRE registration" meta="ETS account + October test date" value="Sep 20" />
+          <CompactRow title="GRE + IELTS booking" meta="First week of November; keep at least 3 days between tests" value="P1" />
           <CompactRow title="Main GRE use" meta="Penn MBDS and USA required/recommended routes" value="P1" />
           <CompactRow title="Not main use" meta="LSE/UCL/Warwick/Erasmus unless they explicitly ask" value="P3" />
         </div>
@@ -1596,7 +1656,7 @@ function IeltsHubPage() {
           <div className="space-y-2">{weeklyPlan.map((item) => <CompactRow key={item.skill} title={item.skill} meta={item.focus} value={item.cadence} />)}</div>
         </Panel>
         <Panel className="p-4">
-          <SectionTitle title="GRE 6-Week Sprint" />
+          <SectionTitle title="GRE + IELTS 8-Week Sprint" />
           <div className="space-y-2">{greSprint.map((item) => <CompactRow key={item.title} title={item.title} meta={item.meta} value={item.value} />)}</div>
         </Panel>
       </div>
@@ -1636,6 +1696,7 @@ function UniversitiesPage() {
   const [country, setCountry] = useState("all");
   const [tier, setTier] = useState("all");
   const [difficulty, setDifficulty] = useState("all");
+  const [courseRoute, setCourseRoute] = useState("all");
   const [selected, setSelected] = useState<University | null>(null);
   const queryClient = useQueryClient();
   const { data = [], error, isError, isLoading, refetch } = useQuery({ queryKey: ["universities"], queryFn: () => apiGet<University[]>("/api/universities") });
@@ -1648,15 +1709,31 @@ function UniversitiesPage() {
     },
   });
   const countries = useMemo(() => ["all", ...Array.from(new Set(data.map((row) => row.country))).sort()], [data]);
-  const filtered = data.filter((row) => (country === "all" || row.country === country) && (tier === "all" || row.tier === tier) && (difficulty === "all" || row.acceptanceDifficulty === difficulty));
+  const filtered = data.filter((row) =>
+    (country === "all" || row.country === country)
+    && (tier === "all" || row.tier === tier)
+    && (difficulty === "all" || row.acceptanceDifficulty === difficulty)
+    && (courseRoute === "all" || universityCourseRoutes(row).includes(courseRoute as CourseRoute))
+  );
   if (isLoading) return <div className="text-[var(--text-secondary)]">Loading university intelligence...</div>;
   if (isError) return <QueryErrorState title="Universities could not load" error={error} onRetry={() => void refetch()} />;
   return (
     <div className="space-y-4">
       <Panel className="flex flex-wrap gap-3 p-4">
+        <Filter label="Course Route" value={courseRoute} options={["all", "behavioural_science", "marketing_consumer_analytics"]} onChange={setCourseRoute} />
         <Filter label="Country" value={country} options={countries} onChange={setCountry} />
         <Filter label="Tier" value={tier} options={["all", "A", "B", "C", "D"]} onChange={setTier} />
         <Filter label="Difficulty" value={difficulty} options={["all", "reach", "target", "safe"]} onChange={setDifficulty} />
+      </Panel>
+      <Panel className="p-4">
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-3 text-sm text-[var(--text-secondary)]">
+            <strong className="text-[var(--accent-emerald)]">P1 Behavioural Science:</strong> strongest fit for your psychology degree, research paper, UX internship and Mentally Prepare.
+          </div>
+          <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-3 text-sm text-[var(--text-secondary)]">
+            <strong className="text-[var(--accent-amber)]">P2 Marketing / Consumer Analytics:</strong> choose programmes with consumer insight and quantitative analytics; build SQL/statistics evidence before applying.
+          </div>
+        </div>
       </Panel>
       <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
         {filtered.map((uni) => <UniversityCard key={uni.id} university={uni} onClick={() => setSelected(uni)} />)}
@@ -1929,7 +2006,7 @@ function Filter({ label, value, options, onChange }: { label: string; value: str
     <label className="grid gap-1 text-xs uppercase text-[var(--text-secondary)]">
       {label}
       <select className="min-w-36 border border-[var(--border)] bg-[var(--bg-primary)] px-3 py-2 text-sm normal-case text-[var(--text-primary)]" value={value} onChange={(event) => onChange(event.target.value)}>
-        {options.map((option) => <option key={option}>{option}</option>)}
+        {options.map((option) => <option key={option} value={option}>{option === "all" ? "All" : displayStatus(option)}</option>)}
       </select>
     </label>
   );
@@ -3372,6 +3449,8 @@ function ProfilePage() {
   if (!row) return <QueryErrorState title="No profile found" error="The database is missing the seeded Anushka profile. Run npm run seed." />;
   const testPlan = asRecord(row.ielts);
   const grePlan = asRecord(testPlan.gre);
+  const researchPlan = asRecord(row.research);
+  const studyPaths = Array.isArray(researchPlan.study_paths) ? researchPlan.study_paths as AnyRow[] : [];
   return (
     <div className="space-y-4">
       <Panel className="p-5">
@@ -3379,9 +3458,24 @@ function ProfilePage() {
         <p className="mt-1 text-[var(--text-secondary)]">{String(row.degree)} | {String(row.university)} | {String(row.year)}</p>
         <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Metric label="IELTS Target" value={String(testPlan.target ?? 7.5)} />
-          <Metric label="IELTS Date" value={String(testPlan.planned_date ?? "2026-10")} />
+          <Metric label="IELTS Date" value={String(testPlan.planned_date ?? "2026-11")} />
           <Metric label="GRE Target" value={String(grePlan.target_total ?? 320)} />
-          <Metric label="GRE Date" value={String(grePlan.planned_date ?? "2026-10")} />
+          <Metric label="GRE Date" value={String(grePlan.planned_date ?? "2026-11")} />
+        </div>
+      </Panel>
+
+      <Panel className="p-4">
+        <SectionTitle title="My Course Options" />
+        <div className="grid gap-3 md:grid-cols-2">
+          {studyPaths.map((path) => (
+            <div className="border-2 border-[var(--border)] bg-[var(--bg-primary)] p-4" key={String(path.priority)}>
+              <div className="mono text-[10px] font-bold uppercase text-[var(--accent-indigo)]">{String(path.priority)} | {String(path.status)}</div>
+              <h3 className="heading mt-2 text-xl font-semibold">{String(path.name)}</h3>
+              <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{String(path.reason)}</p>
+              <div className="mt-3 text-xs font-bold uppercase text-[var(--text-secondary)]">Career direction</div>
+              <p className="mt-1 text-sm text-[var(--accent-emerald)]">{asStringList(path.careers).join(" | ")}</p>
+            </div>
+          ))}
         </div>
       </Panel>
 
@@ -3390,7 +3484,7 @@ function ProfilePage() {
         <div className="grid gap-3 md:grid-cols-3">
           <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-4">
             <div className="mono text-[10px] font-bold uppercase text-[var(--accent-indigo)]">GRE</div>
-            <div className="heading mt-1 text-lg font-semibold">October 2026</div>
+            <div className="heading mt-1 text-lg font-semibold">First week of November 2026</div>
             <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{String(grePlan.strategy ?? "Use GRE only where USA programmes require or reward it.")}</p>
           </div>
           <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-4">

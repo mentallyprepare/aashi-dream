@@ -24,6 +24,7 @@
     "repair:course-intelligence": "tsx server/db/repair-course-intelligence.ts",
     "repair:forms": "tsx server/db/repair-forms-checklist.ts",
     "repair:gre": "tsx server/db/repair-gre-planning.ts",
+    "repair:study-plan": "tsx server/db/repair-study-plan.ts",
     "check": "tsc --noEmit"
   },
   "dependencies": {

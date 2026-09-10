@@ -52,7 +52,7 @@ const profileRow = db.select().from(profile).get();
 if (profileRow) {
   db.update(profile)
     .set({
-      ielts: { ...profileRow.ielts, planned_date: "2026-10" },
+      ielts: { ...profileRow.ielts, planned_date: "2026-11" },
       research: { ...profileRow.research, target_submission: "2026-07" },
       updatedAt: now,
     })
@@ -78,7 +78,7 @@ db.update(researchPapers)
 
 const taskDates: Record<string, string> = {
   "Finish research paper submission package": "2026-07-31",
-  "Build IELTS October preparation calendar": "2026-06-15",
+  "Build November GRE and IELTS preparation calendar": "2026-09-10",
   "Create professor CRM shortlist for UCL, LSE, Bath, Erasmus": "2026-06-20",
 };
 

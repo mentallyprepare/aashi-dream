@@ -9,6 +9,7 @@ import "./db/repair-scholarships.js";
 import "./db/repair-course-intelligence.js";
 import "./db/repair-forms-checklist.js";
 import "./db/repair-gre-planning.js";
+import "./db/repair-study-plan.js";
 import dashboardRouter from "./routes/dashboard.js";
 import aiRouter from "./routes/ai.js";
 import intelligenceRouter from "./routes/intelligence.js";

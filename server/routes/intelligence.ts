@@ -286,7 +286,7 @@ router.get("/research-reputation", (_request, response) => {
 router.get("/ielts-readiness", (_request, response) => {
   const snapshot = readinessSnapshot();
   const target = Number(snapshot.profile?.ielts?.target ?? 7.5);
-  const plannedDate = String(snapshot.profile?.ielts?.planned_date ?? "2026-10");
+  const plannedDate = String(snapshot.profile?.ielts?.planned_date ?? "2026-11");
   const rows = db.select().from(ieltsProgress).all().sort((a, b) => a.date.localeCompare(b.date));
   const best = Math.max(...rows.map((row) => Number(row.overall ?? 0)), 0);
   const readiness = best ? clamp((best / target) * 100) : 0;

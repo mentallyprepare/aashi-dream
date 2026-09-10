@@ -14,21 +14,21 @@ if (profileRow) {
     .set({
       ielts: {
         ...profileRow.ielts,
-        planned_date: profileRow.ielts?.planned_date ?? "2026-10",
+        planned_date: "2026-11",
         target: profileRow.ielts?.target ?? 7.5,
         gre: {
-          planned_date: "2026-10",
+          planned_date: "2026-11",
           target_total: 320,
           quant_target: 160,
           verbal_target: 160,
           awa_target: 4,
           current_total: null,
-          status: "planning_to_take_in_october",
+          status: "planning_for_first_week_of_november",
           strategy:
             "Use GRE for USA routes such as Penn MBDS or other programmes that require it. Keep UK and Europe decisions IELTS/programme-led unless a course explicitly asks for GRE.",
         },
       },
-      experienceTags: Array.from(new Set([...(profileRow.experienceTags ?? []), "GRE October 2026 plan", "USA test strategy"])),
+      experienceTags: Array.from(new Set([...(profileRow.experienceTags ?? []).filter((tag) => tag !== "GRE October 2026 plan"), "GRE November 2026 plan", "USA test strategy"])),
       updatedAt: now,
     })
     .where(eq(profile.id, 1))
@@ -37,22 +37,22 @@ if (profileRow) {
 
 const taskSeeds = [
   {
-    title: "Register GRE General Test for October 2026",
+    title: "Book GRE and IELTS for first week of November 2026",
     category: "tests",
     priority: "p1",
     status: "todo",
     dueDate: "2026-09-20",
     source: "manual",
-    notes: "Create ETS account, choose October GRE General Test date, confirm passport name match, and add Penn MBDS score code planning.",
+    notes: "Choose test dates at least three days apart, confirm passport-name match, request dyslexia accommodations early, and add Penn MBDS score-code planning.",
   },
   {
-    title: "Build 6-week GRE study sprint",
+    title: "Start 8-week dyslexia-friendly GRE and IELTS sprint",
     category: "tests",
     priority: "p1",
     status: "todo",
     dueDate: "2026-09-10",
     source: "manual",
-    notes: "Quant foundations, verbal vocabulary/RC, one AWA template, weekly mock review, and one retake-buffer decision point.",
+    notes: "Use 25-minute blocks, official ETS/Cambridge material, one error notebook, weekly review and gradual timed practice.",
   },
   {
     title: "Decide USA GRE-required shortlist",
@@ -79,4 +79,4 @@ for (const task of taskSeeds) {
   }
 }
 
-console.log("Repaired GRE October planning profile and tasks.");
+console.log("Repaired GRE and IELTS November planning profile and tasks.");

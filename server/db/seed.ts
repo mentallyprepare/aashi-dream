@@ -221,17 +221,17 @@ async function seedIfEmpty() {
       year: "Final Year (4th Year)",
       gpa: null,
       ielts: {
-        planned_date: "2026-10",
+        planned_date: "2026-11",
         target: 7.5,
         current_score: null,
         gre: {
-          planned_date: "2026-10",
+          planned_date: "2026-11",
           target_total: 320,
           quant_target: 160,
           verbal_target: 160,
           awa_target: 4,
           current_total: null,
-          status: "planning_to_take_in_october",
+          status: "planning_for_first_week_of_november",
           strategy: "Use GRE for USA routes such as Penn MBDS or other programmes that require it. UK and Europe remain IELTS/programme-led unless a course explicitly asks for GRE.",
         },
       },
@@ -240,6 +240,22 @@ async function seedIfEmpty() {
         status: "preparing_for_submission",
         target_submission: "2026-07",
         interests: ["Behavioral Science", "Consumer Psychology", "Cyberpsychology", "Digital Behavior", "HCI", "UX", "Product Psychology"],
+        study_paths: [
+          {
+            priority: "P1",
+            name: "MSc Behavioural Science",
+            status: "primary",
+            reason: "Best direct fit with psychology honours, behavioural research, UX research and Mentally Prepare.",
+            careers: ["Behavioural Scientist", "UX Researcher", "Behavioural Product Manager"],
+          },
+          {
+            priority: "P2",
+            name: "MSc Marketing / Consumer Analytics",
+            status: "second_option",
+            reason: "Commercial route into consumer insights, marketing analytics and product strategy; requires stronger quantitative evidence.",
+            careers: ["Consumer Insights Analyst", "Marketing Analyst", "Product Strategist"],
+          },
+        ],
       },
       startup: {
         name: "Mentally Prepare",
@@ -252,7 +268,8 @@ async function seedIfEmpty() {
       ],
       experienceTags: [
         "UX Researcher Internship",
-        "GRE October 2026 plan",
+        "GRE November 2026 plan",
+        "Marketing and Consumer Analytics pathway",
         "USA test strategy",
         "User interviews",
         "Usability testing",
@@ -344,9 +361,10 @@ async function seedIfEmpty() {
   if (existingTasks === 0) {
     db.insert(tasks).values([
       { title: "Finish research paper submission package", category: "research", priority: "p1", status: "in_progress", dueDate: "2026-07-31", source: "ai", notes: "Highest leverage action.", createdAt: now(), updatedAt: now() },
-      { title: "Build IELTS October preparation calendar", category: "ielts", priority: "p1", status: "todo", dueDate: "2026-06-15", source: "ai", notes: "Target 7.5; writing needs early diagnostics.", createdAt: now(), updatedAt: now() },
-      { title: "Register GRE General Test for October 2026", category: "tests", priority: "p1", status: "todo", dueDate: "2026-09-20", source: "manual", notes: "Create ETS account, choose October GRE General Test date, confirm passport name match, and add Penn MBDS score code planning.", createdAt: now(), updatedAt: now() },
-      { title: "Build 6-week GRE study sprint", category: "tests", priority: "p1", status: "todo", dueDate: "2026-09-10", source: "manual", notes: "Quant foundations, verbal vocabulary/RC, one AWA template, weekly mock review, and one retake-buffer decision point.", createdAt: now(), updatedAt: now() },
+      { title: "Build November GRE and IELTS preparation calendar", category: "tests", priority: "p1", status: "todo", dueDate: "2026-09-10", source: "ai", notes: "Target IELTS 7.5 and GRE 320+; begin with untimed diagnostics and request dyslexia accommodations early.", createdAt: now(), updatedAt: now() },
+      { title: "Book GRE and IELTS for first week of November 2026", category: "tests", priority: "p1", status: "todo", dueDate: "2026-09-20", source: "manual", notes: "Choose test dates at least three days apart, confirm passport-name match, request dyslexia accommodations early, and add Penn MBDS score-code planning.", createdAt: now(), updatedAt: now() },
+      { title: "Start 8-week dyslexia-friendly GRE and IELTS sprint", category: "tests", priority: "p1", status: "todo", dueDate: "2026-09-10", source: "manual", notes: "Use 25-minute blocks, official ETS/Cambridge material, one error notebook, weekly review and gradual timed practice.", createdAt: now(), updatedAt: now() },
+      { title: "Build Marketing and Consumer Analytics second-route shortlist", category: "applications", priority: "p2", status: "todo", dueDate: "2026-09-25", source: "manual", notes: "Select 4-6 programmes with consumer behaviour, market research, experimentation, statistics and analytics. Avoid broad marketing degrees with weak analytical content.", createdAt: now(), updatedAt: now() },
       { title: "Decide USA GRE-required shortlist", category: "applications", priority: "p1", status: "todo", dueDate: "2026-09-15", source: "manual", notes: "Mark Penn MBDS as GRE-required unless waiver applies. Verify CMU MHCI, NYU MA Psychology, Berkeley MIMS and other USA routes one by one.", createdAt: now(), updatedAt: now() },
       { title: "Convert UX Researcher internship into a case study", category: "portfolio", priority: "p1", status: "todo", dueDate: "2026-08-20", source: "manual", notes: "Document research goal, method, interview/usability evidence, insights, recommendation, and product impact.", createdAt: now(), updatedAt: now() },
       { title: "Create professor CRM shortlist for UCL, LSE, Bath, Erasmus", category: "network", priority: "p2", status: "todo", dueDate: "2026-06-20", source: "ai", notes: "Professor CRM is a top ROI feature.", createdAt: now(), updatedAt: now() },
