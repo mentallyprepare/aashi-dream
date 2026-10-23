@@ -1752,6 +1752,7 @@ function UniversitiesPage() {
 
 function UniversityDetailModal({ university, onClose, onAdd, isAdding }: { university: University; onClose: () => void; onAdd: () => void; isAdding: boolean }) {
   const { data: courseIntelligence = [] } = useQuery({ queryKey: ["course-intelligence"], queryFn: () => apiGet<CourseIntelligence[]>("/api/course-intelligence") });
+  const { data: formDocuments = [] } = useQuery({ queryKey: ["application-forms"], queryFn: () => apiGet<OfficialSource[]>("/api/documents") });
   const totalCost = university.tuitionUsd + university.livingCostUsd;
   const strategy = universityStrategy(university);
   const roadmap = roadmapForUniversity(university);
@@ -1760,6 +1761,9 @@ function UniversityDetailModal({ university, onClose, onAdd, isAdding }: { unive
   const sourceLinks = officialSourceLinksForUniversity(university);
   const requirementChips = universityRequirementChips(university);
   const courseRecord = courseIntelligence.find((record) => Number(record.universityId) === Number(university.id));
+  const universityKey = university.name.toLowerCase();
+  const formPrefix = universityKey.includes("london school of economics") ? "LSE " : universityKey.includes("university college london") || universityKey === "ucl" ? "UCL " : universityKey.includes("warwick") ? "Warwick " : universityKey.includes("erasmus") ? "Erasmus " : universityKey.includes("carnegie mellon") ? "CMU " : "";
+  const collegeForms = formPrefix ? formRowsFromDocuments(formDocuments).filter((row) => row.title.startsWith(formPrefix) && formMeta(row).stage === "Admission portal") : [];
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -1820,6 +1824,23 @@ function UniversityDetailModal({ university, onClose, onAdd, isAdding }: { unive
             </Panel>
 
             {courseRecord && <CourseResearchDetailPanel record={courseRecord} />}
+
+            {collegeForms.length > 0 && <Panel className="p-4">
+              <SectionTitle title="2027 application form and requirements" />
+              <div className="space-y-3">
+                {collegeForms.map((row) => {
+                  const meta = formMeta(row);
+                  const live = formLiveStatus(meta);
+                  return <div className="border border-[var(--border)] bg-[var(--bg-primary)] p-3" key={row.id ?? row.title}>
+                    <div className="flex flex-wrap items-center gap-2"><strong>{row.title}</strong><FormStatusBadge status={live.status} /></div>
+                    <p className="mt-2 text-sm text-[var(--text-secondary)]">{meta.deadline}</p>
+                    <ul className="mt-2 space-y-1 text-sm text-[var(--text-secondary)]">{meta.documents.map((item) => <li key={item}>- {item}</li>)}</ul>
+                    <a className="mt-3 inline-block text-sm font-bold text-[var(--accent-indigo)]" href={row.url ?? "#"} target="_blank" rel="noreferrer">Official form and instructions</a>
+                    <p className="mt-2 text-xs text-[var(--text-secondary)]">{meta.sourceConfidence}</p>
+                  </div>;
+                })}
+              </div>
+            </Panel>}
 
             <Panel className="p-4">
               <SectionTitle title="Why It Fits You" />
@@ -2109,7 +2130,7 @@ function ApplicationFormsPage() {
     "UX Researcher internship evidence log and portfolio case study",
     "Two recommender confirmations before portals send reference emails",
     "IELTS test booking, score report plan, and school-specific minimums",
-    "GRE October booking, score target, and USA-only requirement map",
+    "GRE November score plan and USA programme requirement map",
     "Funding statement, budget plan, family income proof where needed",
     "Mentally Prepare proof page: users, interviews, experiments, impact and screenshots",
   ];
