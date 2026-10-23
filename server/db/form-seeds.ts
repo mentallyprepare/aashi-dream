@@ -122,7 +122,7 @@ export const formChecklistSeeds: FormChecklistSeed[] = [
       availability: "open",
       openDate: "2026-09-09",
       deadlineDate: "2027-01-15",
-      lastChecked: checked,
+      lastChecked: currentCheck,
     },
   },
   {
@@ -215,7 +215,7 @@ export const formChecklistSeeds: FormChecklistSeed[] = [
       sourceConfidence: `Official LSE 2027/28 available programmes and MSc page checked ${currentCheck}`,
       availability: "open",
       openDate: "2026-10-07",
-      lastChecked: checked,
+      lastChecked: currentCheck,
     },
   },
   {
@@ -261,7 +261,7 @@ export const formChecklistSeeds: FormChecklistSeed[] = [
       availability: "open",
       openDate: "2026-10-19",
       deadlineDate: "2027-03-22",
-      lastChecked: checked,
+      lastChecked: currentCheck,
     },
   },
   {
@@ -331,7 +331,7 @@ export const formChecklistSeeds: FormChecklistSeed[] = [
       availability: "open",
       openDate: "2026-09-01",
       deadlineDate: "2027-08-02",
-      lastChecked: checked,
+      lastChecked: currentCheck,
     },
   },
   {
@@ -377,7 +377,7 @@ export const formChecklistSeeds: FormChecklistSeed[] = [
       availability: "opening_soon",
       openDate: "2026-11-01",
       deadlineDate: "2027-04-01",
-      lastChecked: checked,
+      lastChecked: currentCheck,
     },
   },
   {
